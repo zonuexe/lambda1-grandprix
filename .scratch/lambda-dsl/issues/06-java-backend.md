@@ -10,8 +10,8 @@ Status: ready-for-agent
 
 ## 仕様
 
-- 万能型: `interface D { D apply(D x); }`（関数型インタフェース）
-- `λx.M` → `(D)(_x -> M)`、適用 `f x` → `f.apply(x)`、定義 → `static final D _name = expr;`（クラスの静的フィールド、初期化順序に注意）
+- 万能型（タグ付き union）: 抽象クラス `D`（`apply` は既定で例外）＋ `Fun`（`Function<D,D>` を保持）/ `Num`（`int`）/ `Str`（`String`）のサブクラス
+- `λx.M` → `new Fun(_x -> M)`、適用 `f x` → `f.apply(x)`、定義 → `static final D _name = expr;`（クラスの静的フィールド、初期化順序に注意）
 - プレリュード `translator/preludes/java.java`: `D`、`encodeInt`/`decodeInt`/`decodeBool`（String 返し）、`myassert`。`main` で assert
 - 名前マングリング＋Java 予約語（`if`, `true`, `false`, `assert` 等）対応
 

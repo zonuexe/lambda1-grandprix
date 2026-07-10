@@ -7,7 +7,9 @@ use crate::ast::*;
 use std::path::Path;
 use std::process::ExitStatus;
 
+pub mod haskell;
 pub mod python;
+pub mod racket;
 
 pub trait Backend {
     fn name(&self) -> &'static str;
@@ -79,7 +81,11 @@ pub trait Backend {
 
 /// v1 で有効なバックエンド一覧。
 pub fn all_backends() -> Vec<Box<dyn Backend>> {
-    vec![Box::new(python::Python)]
+    vec![
+        Box::new(python::Python),
+        Box::new(racket::Racket),
+        Box::new(haskell::Haskell),
+    ]
 }
 
 /// 1 バックエンド分を生成・実行する。戻り値は「全 assert 緑」なら true。
