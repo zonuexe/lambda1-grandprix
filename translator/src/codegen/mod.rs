@@ -7,10 +7,14 @@ use crate::ast::*;
 use std::path::Path;
 use std::process::ExitStatus;
 
+pub mod clojure;
+pub mod emacs;
 pub mod haskell;
 pub mod java;
+pub mod php;
 pub mod python;
 pub mod racket;
+pub mod ruby;
 pub mod rust;
 
 pub trait Backend {
@@ -89,6 +93,10 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(haskell::Haskell),
         Box::new(java::Java),
         Box::new(rust::Rust),
+        Box::new(ruby::Ruby),
+        Box::new(php::Php),
+        Box::new(clojure::Clojure),
+        Box::new(emacs::Emacs),
     ]
 }
 
