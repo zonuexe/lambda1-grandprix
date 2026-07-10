@@ -4,3 +4,9 @@ result-*
 
 # direnv
 .direnv/
+
+# Rust
+target/
+
+# translator generated output
+.gen/
