@@ -9,6 +9,7 @@ use std::process::ExitStatus;
 
 pub mod clojure;
 pub mod emacs;
+pub mod go;
 pub mod haskell;
 pub mod java;
 pub mod php;
@@ -16,6 +17,7 @@ pub mod python;
 pub mod racket;
 pub mod ruby;
 pub mod rust;
+pub mod sml;
 
 pub trait Backend {
     fn name(&self) -> &'static str;
@@ -97,6 +99,8 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(php::Php),
         Box::new(clojure::Clojure),
         Box::new(emacs::Emacs),
+        Box::new(go::Go),
+        Box::new(sml::Sml),
     ]
 }
 
