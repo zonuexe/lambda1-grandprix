@@ -8,8 +8,10 @@ use std::path::Path;
 use std::process::ExitStatus;
 
 pub mod haskell;
+pub mod java;
 pub mod python;
 pub mod racket;
+pub mod rust;
 
 pub trait Backend {
     fn name(&self) -> &'static str;
@@ -85,6 +87,8 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(python::Python),
         Box::new(racket::Racket),
         Box::new(haskell::Haskell),
+        Box::new(java::Java),
+        Box::new(rust::Rust),
     ]
 }
 
