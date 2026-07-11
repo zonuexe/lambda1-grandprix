@@ -22,6 +22,7 @@ fn main() {
 
     let mut mode = Mode::Run;
     let mut lang: Option<String> = None;
+    let mut out: Option<String> = None;
     let mut file: Option<String> = None;
     let mut i = 0;
     while i < args.len() {
@@ -32,6 +33,10 @@ fn main() {
             "--lang" => {
                 i += 1;
                 lang = args.get(i).cloned();
+            }
+            "--out" => {
+                i += 1;
+                out = args.get(i).cloned();
             }
             other => file = Some(other.to_string()),
         }
@@ -76,13 +81,13 @@ fn main() {
     match mode {
         Mode::Run => run(&selected, &prog, &outdir),
         Mode::Bench => bench(&selected, &prog, &outdir),
-        Mode::Gen => gen(&selected, &prog, &src),
+        Mode::Gen => gen(&selected, &prog, &src, out.as_deref().unwrap_or("demo")),
     }
 }
 
-/// 各言語の生成ソースを追跡ディレクトリ demo/ に出力する（聴衆が読む成果物）。
-fn gen(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, dsl_src: &str) {
-    let root = std::path::Path::new("demo");
+/// 各言語の生成ソースを出力ディレクトリに書く（既定 demo/。聴衆が読む成果物・計測用）。
+fn gen(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, dsl_src: &str, out_root: &str) {
+    let root = std::path::Path::new(out_root);
     for be in selected {
         let code = be.generate(prog);
         let dir = root.join(be.name());
