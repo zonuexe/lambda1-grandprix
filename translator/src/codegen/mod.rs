@@ -10,6 +10,7 @@ use std::process::{Command, Stdio};
 pub mod clojure;
 pub mod cpp;
 pub mod emacs;
+pub mod emacs_lam;
 pub mod go;
 pub mod haskell;
 pub mod java;
@@ -131,6 +132,7 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(php::Php),
         Box::new(clojure::Clojure),
         Box::new(emacs::Emacs),
+        Box::new(emacs_lam::EmacsLam),
         Box::new(go::Go),
         Box::new(sml::Sml),
         Box::new(perl::Perl),
