@@ -1,5 +1,6 @@
 # λ-1 translator — Python prelude
 import sys
+sys.setrecursionlimit(1_000_000)  # チャーチ数のデコードは値の深さだけ再帰する
 
 _failures = 0
 

@@ -2,7 +2,7 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 
 pub struct Scala;
 
@@ -47,7 +47,17 @@ impl Backend for Scala {
             .replace("//__ASSERTS__", &asserts_block)
     }
 
-    fn exec(&self, _dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
-        Command::new("scala").arg(file).status()
+    fn build(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
+        let st = Command::new("scalac").arg("-d").arg(dir).arg(file).status()?;
+        Ok(st.success())
+    }
+    fn run_argv(&self, dir: &Path, _file: &Path) -> Vec<String> {
+        // @main run -> クラス run。scala runner が scala3 ライブラリを classpath に足す。
+        vec![
+            "scala".into(),
+            "-classpath".into(),
+            dir.to_string_lossy().into_owned(),
+            "run".into(),
+        ]
     }
 }

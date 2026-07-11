@@ -8,7 +8,7 @@ use crate::ast::{Program, Term};
 use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 
 pub struct Cpp {
     globals: RefCell<BTreeSet<String>>,
@@ -147,17 +147,18 @@ impl Backend for Cpp {
         }
     }
 
-    fn exec(&self, dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
+    fn build(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
         let bin = dir.join("main_bin");
-        let compile = Command::new("/usr/bin/clang++")
+        let st = Command::new("/usr/bin/clang++")
             .arg("-std=c++17")
+            .arg("-O2")
             .arg(file)
             .arg("-o")
             .arg(&bin)
             .status()?;
-        if !compile.success() {
-            return Ok(compile);
-        }
-        Command::new(&bin).status()
+        Ok(st.success())
+    }
+    fn run_argv(&self, dir: &Path, _file: &Path) -> Vec<String> {
+        vec![dir.join("main_bin").to_string_lossy().into_owned()]
     }
 }

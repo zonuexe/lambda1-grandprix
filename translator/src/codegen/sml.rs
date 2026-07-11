@@ -2,7 +2,7 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 
 pub struct Sml;
 
@@ -62,16 +62,16 @@ impl Backend for Sml {
         s
     }
 
-    fn exec(&self, dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
+    fn build(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
         let bin = dir.join("main_bin");
-        let compile = Command::new("mlton")
+        let st = Command::new("mlton")
             .arg("-output")
             .arg(&bin)
             .arg(file)
             .status()?;
-        if !compile.success() {
-            return Ok(compile);
-        }
-        Command::new(&bin).status()
+        Ok(st.success())
+    }
+    fn run_argv(&self, dir: &Path, _file: &Path) -> Vec<String> {
+        vec![dir.join("main_bin").to_string_lossy().into_owned()]
     }
 }

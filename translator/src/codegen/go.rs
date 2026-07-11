@@ -2,7 +2,7 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 
 pub struct Go;
 
@@ -47,7 +47,18 @@ impl Backend for Go {
             .replace("//__ASSERTS__", &asserts_block)
     }
 
-    fn exec(&self, _dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
-        Command::new("go").arg("run").arg(file).status()
+    fn build(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
+        let bin = dir.join("main_bin");
+        let st = Command::new("go")
+            .arg("build")
+            .arg("-o")
+            .arg(&bin)
+            .arg(file)
+            .env("GOFLAGS", "-mod=mod")
+            .status()?;
+        Ok(st.success())
+    }
+    fn run_argv(&self, dir: &Path, _file: &Path) -> Vec<String> {
+        vec![dir.join("main_bin").to_string_lossy().into_owned()]
     }
 }

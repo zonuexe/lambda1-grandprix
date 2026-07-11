@@ -2,7 +2,6 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
 
 pub struct Racket;
 
@@ -56,7 +55,7 @@ impl Backend for Racket {
         s
     }
 
-    fn exec(&self, _dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
-        Command::new("racket").arg(file).status()
+    fn run_argv(&self, _dir: &Path, file: &Path) -> Vec<String> {
+        vec!["racket".into(), file.to_string_lossy().into_owned()]
     }
 }

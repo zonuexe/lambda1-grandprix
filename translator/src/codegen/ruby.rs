@@ -2,7 +2,6 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
 
 pub struct Ruby;
 
@@ -52,7 +51,7 @@ impl Backend for Ruby {
         s
     }
 
-    fn exec(&self, _dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
-        Command::new("ruby").arg(file).status()
+    fn run_argv(&self, _dir: &Path, file: &Path) -> Vec<String> {
+        vec!["ruby".into(), file.to_string_lossy().into_owned()]
     }
 }

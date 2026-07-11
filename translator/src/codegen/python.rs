@@ -2,7 +2,6 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
 
 pub struct Python;
 
@@ -53,7 +52,7 @@ impl Backend for Python {
         s
     }
 
-    fn exec(&self, _dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
-        Command::new("python3").arg(file).status()
+    fn run_argv(&self, _dir: &Path, file: &Path) -> Vec<String> {
+        vec!["python3".into(), file.to_string_lossy().into_owned()]
     }
 }

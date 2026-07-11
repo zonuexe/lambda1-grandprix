@@ -2,7 +2,6 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
 
 pub struct Php;
 
@@ -57,7 +56,7 @@ impl Backend for Php {
         s
     }
 
-    fn exec(&self, _dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
-        Command::new("php").arg(file).status()
+    fn run_argv(&self, _dir: &Path, file: &Path) -> Vec<String> {
+        vec!["php".into(), file.to_string_lossy().into_owned()]
     }
 }

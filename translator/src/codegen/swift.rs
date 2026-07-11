@@ -3,7 +3,7 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 
 pub struct Swift;
 
@@ -44,13 +44,21 @@ impl Backend for Swift {
             .replace("//__ASSERTS__", &asserts_block)
     }
 
-    fn exec(&self, _dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
+    fn build(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
         // nix devShell の SDKROOT/DEVELOPER_DIR は nix 提供の古い SDK を指し、
-        // システム swift(6.3.x) と不一致になる。除去して既定 SDK を使わせる。
-        Command::new("/usr/bin/swift")
+        // システム swiftc(6.3.x) と不一致になる。除去して既定 SDK を使わせる。
+        let bin = dir.join("main_bin");
+        let st = Command::new("/usr/bin/swiftc")
+            .arg("-O")
+            .arg("-o")
+            .arg(&bin)
             .arg(file)
             .env_remove("SDKROOT")
             .env_remove("DEVELOPER_DIR")
-            .status()
+            .status()?;
+        Ok(st.success())
+    }
+    fn run_argv(&self, dir: &Path, _file: &Path) -> Vec<String> {
+        vec![dir.join("main_bin").to_string_lossy().into_owned()]
     }
 }

@@ -8,7 +8,7 @@ use super::Backend;
 use crate::ast::Term;
 use std::collections::BTreeSet;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 
 pub struct Rust;
 
@@ -118,9 +118,9 @@ impl Backend for Rust {
         }
     }
 
-    fn exec(&self, dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
+    fn build(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
         let bin = dir.join("main_bin");
-        let compile = Command::new("rustc")
+        let st = Command::new("rustc")
             .arg("--edition")
             .arg("2021")
             .arg("-O")
@@ -128,9 +128,9 @@ impl Backend for Rust {
             .arg("-o")
             .arg(&bin)
             .status()?;
-        if !compile.success() {
-            return Ok(compile);
-        }
-        Command::new(&bin).status()
+        Ok(st.success())
+    }
+    fn run_argv(&self, dir: &Path, _file: &Path) -> Vec<String> {
+        vec![dir.join("main_bin").to_string_lossy().into_owned()]
     }
 }

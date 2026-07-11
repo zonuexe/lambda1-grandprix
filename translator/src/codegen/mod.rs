@@ -5,7 +5,7 @@
 
 use crate::ast::*;
 use std::path::Path;
-use std::process::ExitStatus;
+use std::process::{Command, Stdio};
 
 pub mod clojure;
 pub mod cpp;
@@ -45,8 +45,23 @@ pub trait Backend {
     fn emit_assert(&self, idx: usize, lhs: &str, rhs: &str) -> String;
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String;
 
-    /// 生成物を実行し、終了ステータスを返す（成功＝全 assert 緑）。
-    fn exec(&self, dir: &Path, file: &Path) -> std::io::Result<ExitStatus>;
+    /// コンパイル段（計測外）。インタプリタ言語は既定の no-op。成功なら true。
+    fn build(&self, _dir: &Path, _file: &Path) -> std::io::Result<bool> {
+        Ok(true)
+    }
+
+    /// 実行コマンド（計測対象）。`argv[0]` が実行ファイル、以降が引数。
+    fn run_argv(&self, dir: &Path, file: &Path) -> Vec<String>;
+
+    /// build して run する（`run` サブコマンド用）。成功＝全 assert 緑。
+    fn exec(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
+        if !self.build(dir, file)? {
+            return Ok(false);
+        }
+        let argv = self.run_argv(dir, file);
+        let st = Command::new(&argv[0]).args(&argv[1..]).status()?;
+        Ok(st.success())
+    }
 
     fn render(&self, t: &Term) -> String {
         match t {
@@ -114,13 +129,79 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
     ]
 }
 
-/// 1 バックエンド分を生成・実行する。戻り値は「全 assert 緑」なら true。
-pub fn run_backend(be: &dyn Backend, prog: &Program, outdir: &Path) -> std::io::Result<bool> {
+/// 生成物をディレクトリに書き出し、(dir, file) を返す。
+fn emit_to_dir(be: &dyn Backend, prog: &Program, outdir: &Path) -> std::io::Result<(std::path::PathBuf, std::path::PathBuf)> {
     let code = be.generate(prog);
     let dir = outdir.join(be.name());
     std::fs::create_dir_all(&dir)?;
     let file = dir.join(format!("main.{}", be.ext()));
     std::fs::write(&file, code)?;
-    let status = be.exec(&dir, &file)?;
-    Ok(status.success())
+    Ok((dir, file))
+}
+
+/// 1 バックエンド分を生成・実行する。戻り値は「全 assert 緑」なら true。
+pub fn run_backend(be: &dyn Backend, prog: &Program, outdir: &Path) -> std::io::Result<bool> {
+    let (dir, file) = emit_to_dir(be, prog, outdir)?;
+    be.exec(&dir, &file)
+}
+
+/// 1 回の計測結果。
+pub struct Sample {
+    pub real_sec: f64,
+    pub max_rss_bytes: u64,
+}
+
+/// 1 バックエンドをベンチする。build は計測外、run_argv の実行のみ `/usr/bin/time -l` で計測。
+/// ノイズ低減のため 3 回実行し wall-clock 最小の回を採る（best-of-3）。
+pub fn bench_backend(be: &dyn Backend, prog: &Program, outdir: &Path) -> std::io::Result<Option<Sample>> {
+    let (dir, file) = emit_to_dir(be, prog, outdir)?;
+    if !be.build(&dir, &file)? {
+        return Ok(None);
+    }
+    let argv = be.run_argv(&dir, &file);
+    let mut best: Option<Sample> = None;
+    for _ in 0..3 {
+        let out = Command::new("/usr/bin/time")
+            .arg("-l")
+            .args(&argv)
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .output()?;
+        if !out.status.success() {
+            return Ok(None);
+        }
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        if let Some(s) = parse_time_l(&stderr) {
+            match &best {
+                Some(b) if b.real_sec <= s.real_sec => {}
+                _ => best = Some(s),
+            }
+        }
+    }
+    Ok(best)
+}
+
+/// macOS の `/usr/bin/time -l` の stderr から (real 秒, 最大 RSS バイト) を取り出す。
+fn parse_time_l(stderr: &str) -> Option<Sample> {
+    let mut real = None;
+    let mut rss = None;
+    for line in stderr.lines() {
+        let t = line.trim();
+        if real.is_none() {
+            if let Some(idx) = t.find(" real") {
+                if let Some(tok) = t[..idx].split_whitespace().last() {
+                    real = tok.parse::<f64>().ok();
+                }
+            }
+        }
+        if t.contains("maximum resident set size") {
+            if let Some(tok) = t.split_whitespace().next() {
+                rss = tok.parse::<u64>().ok();
+            }
+        }
+    }
+    Some(Sample {
+        real_sec: real?,
+        max_rss_bytes: rss?,
+    })
 }

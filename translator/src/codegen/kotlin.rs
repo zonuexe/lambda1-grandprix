@@ -2,7 +2,7 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 
 pub struct Kotlin;
 
@@ -47,17 +47,21 @@ impl Backend for Kotlin {
             .replace("//__ASSERTS__", &asserts_block)
     }
 
-    fn exec(&self, dir: &Path, file: &Path) -> std::io::Result<ExitStatus> {
+    fn build(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
         let jar = dir.join("app.jar");
-        let compile = Command::new("kotlinc")
+        let st = Command::new("kotlinc")
             .arg(file)
             .arg("-include-runtime")
             .arg("-d")
             .arg(&jar)
             .status()?;
-        if !compile.success() {
-            return Ok(compile);
-        }
-        Command::new("java").arg("-jar").arg(&jar).status()
+        Ok(st.success())
+    }
+    fn run_argv(&self, dir: &Path, _file: &Path) -> Vec<String> {
+        vec![
+            "java".into(),
+            "-jar".into(),
+            dir.join("app.jar").to_string_lossy().into_owned(),
+        ]
     }
 }

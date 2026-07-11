@@ -1,6 +1,7 @@
 //! λ-1 translator CLI.
 //!
-//!   translator run [--lang <name>] <file.lam>
+//!   translator run   [--lang <name>] <file.lam>   … 生成・実行して assert を確認
+//!   translator bench [--lang <name>] <file.lam>   … 実行時間・最大 RSS を計測して比較
 
 mod ast;
 mod codegen;
@@ -9,15 +10,22 @@ mod parser;
 
 use std::path::PathBuf;
 
+enum Mode {
+    Run,
+    Bench,
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
 
+    let mut mode = Mode::Run;
     let mut lang: Option<String> = None;
     let mut file: Option<String> = None;
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
-            "run" => {}
+            "run" => mode = Mode::Run,
+            "bench" => mode = Mode::Bench,
             "--lang" => {
                 i += 1;
                 lang = args.get(i).cloned();
@@ -30,7 +38,7 @@ fn main() {
     let file = match file {
         Some(f) => f,
         None => {
-            eprintln!("usage: translator run [--lang <name>] <file.lam>");
+            eprintln!("usage: translator <run|bench> [--lang <name>] <file.lam>");
             std::process::exit(2);
         }
     };
@@ -39,7 +47,6 @@ fn main() {
         eprintln!("cannot read {}: {}", file, e);
         std::process::exit(2);
     });
-
     let toks = lexer::lex(&src).unwrap_or_else(|e| {
         eprintln!("lex error: {}", e);
         std::process::exit(1);
@@ -53,18 +60,27 @@ fn main() {
 
     let outdir = PathBuf::from(".gen");
     let backends = codegen::all_backends();
-    let mut any_fail = false;
-    let mut ran = 0;
+    let selected: Vec<&Box<dyn codegen::Backend>> = backends
+        .iter()
+        .filter(|be| lang.as_deref().map_or(true, |l| be.name() == l))
+        .collect();
 
-    for be in &backends {
-        if let Some(l) = &lang {
-            if be.name() != l {
-                continue;
-            }
-        }
-        ran += 1;
+    if selected.is_empty() {
+        eprintln!("no backend matched --lang {:?}", lang);
+        std::process::exit(2);
+    }
+
+    match mode {
+        Mode::Run => run(&selected, &prog, &outdir),
+        Mode::Bench => bench(&selected, &prog, &outdir),
+    }
+}
+
+fn run(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, outdir: &std::path::Path) {
+    let mut any_fail = false;
+    for be in selected {
         println!("=== {} ===", be.name());
-        match codegen::run_backend(be.as_ref(), &prog, &outdir) {
+        match codegen::run_backend(be.as_ref(), prog, outdir) {
             Ok(true) => {}
             Ok(false) => any_fail = true,
             Err(e) => {
@@ -74,10 +90,37 @@ fn main() {
         }
         println!();
     }
-
-    if ran == 0 {
-        eprintln!("no backend matched --lang {:?}", lang);
-        std::process::exit(2);
-    }
     std::process::exit(if any_fail { 1 } else { 0 });
+}
+
+fn bench(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, outdir: &std::path::Path) {
+    let mut rows: Vec<(String, Option<codegen::Sample>)> = Vec::new();
+    for be in selected {
+        eprintln!("benching {}…", be.name());
+        let sample = codegen::bench_backend(be.as_ref(), prog, outdir).unwrap_or(None);
+        rows.push((be.name().to_string(), sample));
+    }
+
+    // wall-clock 昇順（計測できなかったものは末尾）。
+    rows.sort_by(|a, b| match (&a.1, &b.1) {
+        (Some(x), Some(y)) => x.real_sec.partial_cmp(&y.real_sec).unwrap(),
+        (Some(_), None) => std::cmp::Ordering::Less,
+        (None, Some(_)) => std::cmp::Ordering::Greater,
+        (None, None) => std::cmp::Ordering::Equal,
+    });
+
+    println!();
+    println!("{:<10} {:>12} {:>12}", "language", "time (ms)", "peak (MB)");
+    println!("{:-<10} {:->12} {:->12}", "", "", "");
+    for (name, s) in &rows {
+        match s {
+            Some(s) => println!(
+                "{:<10} {:>12.1} {:>12.1}",
+                name,
+                s.real_sec * 1000.0,
+                s.max_rss_bytes as f64 / (1024.0 * 1024.0)
+            ),
+            None => println!("{:<10} {:>12} {:>12}", name, "n/a", "n/a"),
+        }
+    }
 }
