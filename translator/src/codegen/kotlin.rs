@@ -27,7 +27,7 @@ impl Backend for Kotlin {
         format!("{}({})", name, args.join(", "))
     }
     fn emit_str(&self, s: &str) -> String {
-        format!("\"{}\"", s)
+        format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
     }
     fn emit_def(&self, name: &str, term: &str) -> String {
         format!("val {}: D = {}", name, term)

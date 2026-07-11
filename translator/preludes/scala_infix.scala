@@ -37,6 +37,76 @@ def check(label: String, a: String, b: String): Unit =
   if (a == b) println("ok   " + label)
   else { _failures += 1; println("FAIL " + label + ": " + a + " != " + b) }
 
+// ============ JSON 層（型付き値。ADR-0005） ============
+val jK: D = Fun(a => Fun(b => a))
+val jKI: D = Fun(a => Fun(b => b))
+def mkpair(a: D, b: D): D = Fun(s => s ~ a ~ b)
+def fstp(p: D): D = p ~ jK
+def sndp(p: D): D = p ~ jKI
+def churchToInt(c: D): Int =
+  (c ~ Fun(v => v match { case Num(k) => Num(k + 1); case _ => throw new RuntimeException("churchToInt") }) ~ Num(0)) match {
+    case Num(k) => k
+    case _ => throw new RuntimeException("churchToInt")
+  }
+val cTrue: D = Fun(t => Fun(f => t))
+val cFalse: D = Fun(t => Fun(f => f))
+def boolToHost(c: D): Boolean =
+  (c ~ Str("T") ~ Str("F")) match {
+    case Str(s) => s == "T"
+    case _ => throw new RuntimeException("boolToHost")
+  }
+val nilH: D = Fun(n => Fun(c => n))
+def consH(h: D, t: D): D = Fun(n => Fun(c => c ~ h ~ t))
+def isNil(lst: D): Boolean =
+  boolToHost(lst ~ cTrue ~ Fun(h => Fun(t => cFalse)))
+def headL(lst: D): D = lst ~ Str("") ~ Fun(h => Fun(t => h))
+def tailL(lst: D): D = lst ~ Str("") ~ Fun(h => Fun(t => t))
+def walkL(lst: D): List[D] = {
+  val out = scala.collection.mutable.ListBuffer[D]()
+  var l = lst
+  while (!isNil(l)) { out += headL(l); l = tailL(l) }
+  out.toList
+}
+def jInt(n: Int): D = mkpair(encodeInt(1), encodeInt(n))
+def jBool(b: D): D = mkpair(encodeInt(2), b)
+def jStr(s: String): D = {
+  var lst = nilH
+  val bytes = s.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+  for (i <- bytes.length - 1 to 0 by -1) lst = consH(encodeInt(bytes(i) & 0xFF), lst)
+  mkpair(encodeInt(3), lst)
+}
+def jArr(lst: D): D = mkpair(encodeInt(4), lst)
+def jObj(lst: D): D = mkpair(encodeInt(5), lst)
+def jNull(): D = mkpair(encodeInt(6), Fun(x => x))
+def jsonEscape(s: String): String = {
+  val sb = new StringBuilder("\"")
+  for (c <- s) c match {
+    case '"' => sb.append("\\\"")
+    case '\\' => sb.append("\\\\")
+    case _ => sb.append(c)
+  }
+  sb.append("\"").toString
+}
+def decodeJson(v: D): String = {
+  val tag = churchToInt(fstp(v))
+  val payload = sndp(v)
+  tag match {
+    case 1 => churchToInt(payload).toString
+    case 2 => if (boolToHost(payload)) "true" else "false"
+    case 3 =>
+      val bs = walkL(payload)
+      val arr = new Array[Byte](bs.length)
+      for (i <- bs.indices) arr(i) = churchToInt(bs(i)).toByte
+      jsonEscape(new String(arr, java.nio.charset.StandardCharsets.UTF_8))
+    case 4 =>
+      "[" + walkL(payload).map(decodeJson).mkString(",") + "]"
+    case 5 =>
+      "{" + walkL(payload).map(pr => decodeJson(fstp(pr)) + ":" + decodeJson(sndp(pr))).mkString(",") + "}"
+    case 6 => "null"
+    case _ => "?"
+  }
+}
+
 //__DEFS__
 
 @main def run(): Unit = {
