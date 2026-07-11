@@ -8,6 +8,7 @@ use std::path::Path;
 use std::process::{Command, Stdio};
 
 pub mod clojure;
+pub mod clojure_lam;
 pub mod cpp;
 pub mod emacs;
 pub mod emacs_lam;
@@ -24,6 +25,7 @@ pub mod racket;
 pub mod ruby;
 pub mod rust;
 pub mod scala;
+pub mod scala_infix;
 pub mod sml;
 pub mod swift;
 
@@ -131,12 +133,14 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(ruby::Ruby),
         Box::new(php::Php),
         Box::new(clojure::Clojure),
+        Box::new(clojure_lam::ClojureLam),
         Box::new(emacs::Emacs),
         Box::new(emacs_lam::EmacsLam),
         Box::new(go::Go),
         Box::new(sml::Sml),
         Box::new(perl::Perl),
         Box::new(scala::Scala),
+        Box::new(scala_infix::ScalaInfix),
         Box::new(kotlin::Kotlin),
         Box::new(cpp::Cpp::new()),
         Box::new(swift::Swift),
