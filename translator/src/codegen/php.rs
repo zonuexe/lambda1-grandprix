@@ -60,6 +60,14 @@ impl Backend for Php {
     }
 
     fn run_argv(&self, _dir: &Path, file: &Path) -> Vec<String> {
-        vec!["php".into(), file.to_string_lossy().into_owned()]
+        let mut v = vec!["php".to_string()];
+        if std::env::var("LAM1_JIT").is_ok() {
+            // PHP 8 の OPcache JIT（CLI では既定で無効なので明示的に有効化）
+            v.push("-dopcache.enable_cli=1".to_string());
+            v.push("-dopcache.jit_buffer_size=64M".to_string());
+            v.push("-dopcache.jit=tracing".to_string());
+        }
+        v.push(file.to_string_lossy().into_owned());
+        v
     }
 }

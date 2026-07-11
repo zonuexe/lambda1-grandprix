@@ -55,6 +55,11 @@ impl Backend for Ruby {
     }
 
     fn run_argv(&self, _dir: &Path, file: &Path) -> Vec<String> {
-        vec!["ruby".into(), file.to_string_lossy().into_owned()]
+        let mut v = vec!["ruby".to_string()];
+        if std::env::var("LAM1_JIT").is_ok() {
+            v.push("--yjit".to_string()); // Ruby 3.x の YJIT
+        }
+        v.push(file.to_string_lossy().into_owned());
+        v
     }
 }

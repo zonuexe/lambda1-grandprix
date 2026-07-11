@@ -31,6 +31,18 @@ Status: ready-for-agent
 
 native（haskell/rust/go/sml/cpp/swift）≈10ms・1.7〜11MB / java 30・kotlin 40・python 40・perl 40・ruby 50 / php 110 / scala 240 / emacs 260 / clojure 400 / racket 570。数値は「生成コードの実行＝エンコード方式＋処理系起動込み」であり、純粋な言語速度ではない点を発表でも明記する。
 
+## JIT（Ruby/PHP）
+
+環境変数 `LAM1_JIT=1` で Ruby/PHP の実行に JIT フラグを付ける（run/bench 共通）:
+- Ruby: `--yjit`（YJIT）
+- PHP: `-dopcache.enable_cli=1 -dopcache.jit_buffer_size=64M -dopcache.jit=tracing`
+
+計測（3000×mult 30 30、best-of-3）:
+- **Ruby YJIT: 170ms → 100ms（約1.7倍）** 明確に高速化
+- **PHP JIT: 170ms → 170ms** 変化なし。PHP の tracing JIT は数値/配列ループ向けで、チャーチ数＝動的クロージャ呼び出しの塊には効きにくい（発表で語れる知見）。
+- どちらも JIT 有効で assert は緑のまま。
+
 ## 受け入れ条件
 
 - `translator bench bench.lam` が全 16 言語の wall-clock と最大 RSS を集計・ソート表示する。✅
+- `LAM1_JIT=1` で Ruby/PHP を JIT 有効化して計測できる。✅
