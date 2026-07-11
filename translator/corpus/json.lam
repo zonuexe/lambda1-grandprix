@@ -7,6 +7,16 @@ cons  = λh.λt.λn.λc.c h t
 true  = λt.λf.t
 false = λt.λf.f
 
+# range n = チャーチ数 n から昇順の JSON 整数配列 payload [1..n] を組む。
+# チャーチ数 n を反復に使い、カウンタ k を pred で減らしつつ typed-int を前置き
+# する（n を先頭に前置き→最後に 1 を前置き、で結果は昇順 [1,..,n] になる）。
+snd   = λp.p false
+one   = λf.λx.f x                              # チャーチ数 1（int タグ）
+pred  = λn.λf.λx.n (λg.λh.h (g f)) (λu.x) (λu.u)
+tint  = λk.pair one k                          # チャーチ数 k → typed value（int）
+step  = λp.p (λk.λl.pair (pred k) (cons (tint k) l))
+range = λn.snd (n step (pair n nil))
+
 ---
 
 assert '1'         == decodeJson[ jInt[1] ]
@@ -17,3 +27,6 @@ assert 'null'      == decodeJson[ jNull[] ]
 assert '[1,true]'  == decodeJson[ jArr[ cons (jInt[1]) (cons (jBool[true]) nil) ] ]
 assert '{"k":1}'   == decodeJson[ jObj[ cons (pair (jStr['k']) (jInt[1])) nil ] ]
 assert '[1,[2,3]]' == decodeJson[ jArr[ cons (jInt[1]) (cons (jArr[ cons (jInt[2]) (cons (jInt[3]) nil) ]) nil) ] ]
+assert '[]'        == decodeJson[ jArr[ range (encodeInt[0]) ] ]
+assert '[1]'       == decodeJson[ jArr[ range (encodeInt[1]) ] ]
+assert '[1,2,3]'   == decodeJson[ jArr[ range (encodeInt[3]) ] ]
