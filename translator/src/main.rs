@@ -2,6 +2,7 @@
 //!
 //!   translator run   [--lang <name>] <file.lam>   … 生成・実行して assert を確認
 //!   translator bench [--lang <name>] <file.lam>   … 実行時間・最大 RSS を計測して比較
+//!   translator gen   [--lang <name>] <file.lam>   … 読める成果物を demo/ に出力（実行しない）
 
 mod ast;
 mod codegen;
@@ -13,6 +14,7 @@ use std::path::PathBuf;
 enum Mode {
     Run,
     Bench,
+    Gen,
 }
 
 fn main() {
@@ -26,6 +28,7 @@ fn main() {
         match args[i].as_str() {
             "run" => mode = Mode::Run,
             "bench" => mode = Mode::Bench,
+            "gen" => mode = Mode::Gen,
             "--lang" => {
                 i += 1;
                 lang = args.get(i).cloned();
@@ -73,7 +76,30 @@ fn main() {
     match mode {
         Mode::Run => run(&selected, &prog, &outdir),
         Mode::Bench => bench(&selected, &prog, &outdir),
+        Mode::Gen => gen(&selected, &prog, &src),
     }
+}
+
+/// 各言語の生成ソースを追跡ディレクトリ demo/ に出力する（聴衆が読む成果物）。
+fn gen(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, dsl_src: &str) {
+    let root = std::path::Path::new("demo");
+    for be in selected {
+        let code = be.generate(prog);
+        let dir = root.join(be.name());
+        if let Err(e) = std::fs::create_dir_all(&dir) {
+            eprintln!("{}: {}", be.name(), e);
+            continue;
+        }
+        let file = dir.join(format!("demo.{}", be.ext()));
+        match std::fs::write(&file, code) {
+            Ok(()) => println!("wrote {}", file.display()),
+            Err(e) => eprintln!("{}: {}", be.name(), e),
+        }
+    }
+    // 元の DSL ソースも並べておく（対比用）。
+    let src_path = root.join("source.lam");
+    let _ = std::fs::write(&src_path, dsl_src);
+    println!("wrote {}", src_path.display());
 }
 
 fn run(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, outdir: &std::path::Path) {
