@@ -37,3 +37,11 @@ _Avoid_: ライブラリ, ランタイム
 **境界 (Boundary)**:
 ラムダ世界の値と、ホスト言語の native な値（整数・真偽値など）が相互変換される地点。DSL 上ではホストヘルパー呼び出しを `name[…]` と表記し、λ適用の並置と構文的に区別する。
 _Avoid_: インタフェース, ブリッジ
+
+**型付き値 (Typed value)**:
+純ラムダの値に型タグを付けた `pair tag payload`。tag はチャーチ数の id（int=1 / bool=2 / string=3 / array=4 / object=5 / null=6、float=7 は予約）。汎用 `decode` が自己記述的に JSON 相当へ落とせる。生のチャーチ数（raw 層）の上に載る「JSON 層」で、両者は併存する。詳細は [ADR-0005](docs/adr/0005-typed-values-and-json.md)。
+_Avoid_: タグ無しの生の値との混同
+
+**Scott リスト (Scott-encoded list)**:
+array / string / object の土台となるリスト表現。`nil = λn.λc. n` / `cons h t = λn.λc. c h t`。`list onNil onCons` で構造分解でき、ホストの再帰 decode に用いる。集約向きの Church fold リストとは別物。
+_Avoid_: Church fold リスト（分解に不向き）
