@@ -12,11 +12,14 @@ pub mod emacs;
 pub mod go;
 pub mod haskell;
 pub mod java;
+pub mod kotlin;
+pub mod perl;
 pub mod php;
 pub mod python;
 pub mod racket;
 pub mod ruby;
 pub mod rust;
+pub mod scala;
 pub mod sml;
 
 pub trait Backend {
@@ -101,6 +104,9 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(emacs::Emacs),
         Box::new(go::Go),
         Box::new(sml::Sml),
+        Box::new(perl::Perl),
+        Box::new(scala::Scala),
+        Box::new(kotlin::Kotlin),
     ]
 }
 
