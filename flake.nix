@@ -53,6 +53,7 @@
               # Lisp / Scheme
               emacs-nox # Emacs Lisp（emacs --batch で実行。GUI 不要）
               racket
+              newlisp # newLISP（niiLISP 互換の代理。church エンコードは cons 不使用）
             ];
 
             shellHook = ''

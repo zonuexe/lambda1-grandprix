@@ -17,6 +17,7 @@ pub mod haskell;
 pub mod java;
 pub mod kotlin;
 pub mod lazyk;
+pub mod newlisp;
 pub mod pascal;
 pub mod perl;
 pub mod php;
@@ -145,6 +146,7 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(cpp::Cpp::new()),
         Box::new(swift::Swift),
         Box::new(pascal::Pascal),
+        Box::new(newlisp::NewLisp::new()),
         Box::new(lazyk::LazyK),
     ]
 }
