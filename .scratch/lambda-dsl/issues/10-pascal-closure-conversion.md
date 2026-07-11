@@ -1,6 +1,6 @@
 # 10: Free Pascal バックエンド（クロージャ変換）
 
-Status: ready-for-human
+Status: done（選択肢1で実装）
 
 依存: [02](02-codegen-core.md)
 
@@ -27,6 +27,14 @@ Status: ready-for-human
 
 まず選択肢2（新しい FPC が nixpkgs にあるか）を確認し、無ければ選択肢1のクロージャ変換を実装する。クロージャ変換は「無名関数を持たない言語でどうラムダを表現するか」というトーク的にも面白い題材になる。
 
+## 実装結果（選択肢1: クロージャ変換）
+
+- `translator/src/codegen/pascal.rs` が `generate` を全面 override し、各 λ を `TCloN = class(TValue)`（捕捉自由変数フィールド＋`Apply`）へ変換。ネスト λ は `TCloN.CreateC(捕捉値...)`。
+- 万能型 `TValue`＝タグ付き（`TNum`/`TStr`＋クロージャオブジェクト）。チャーチ数は固定クラス `TChurchF`/`TChurchFX`、`decodeInt` は `TIncr` を注入。
+- **macOS リンカ非互換**: FPC 3.2.2 の `.o` を新 ld64 が拒否（`pointer not aligned in FPC_THREADVARTABLES`）→ `fpc -k-ld_classic` で旧リンカ経路にして解決。
+- コンパイル自体は最初から成功しており、問題はコード生成ではなくリンク環境だった。
+
 ## 受け入れ条件
 
-- v1 コーパスが Free Pascal で緑（`nix develop` 下の `fpc`）
+- v1 コーパスが Free Pascal で緑（`nix develop` 下の `fpc`）✅
+- bench でもネイティブ帯（約 10ms / 16MB）で動作 ✅
