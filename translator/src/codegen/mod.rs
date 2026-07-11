@@ -8,6 +8,7 @@ use std::path::Path;
 use std::process::ExitStatus;
 
 pub mod clojure;
+pub mod cpp;
 pub mod emacs;
 pub mod go;
 pub mod haskell;
@@ -21,6 +22,7 @@ pub mod ruby;
 pub mod rust;
 pub mod scala;
 pub mod sml;
+pub mod swift;
 
 pub trait Backend {
     fn name(&self) -> &'static str;
@@ -107,6 +109,8 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(perl::Perl),
         Box::new(scala::Scala),
         Box::new(kotlin::Kotlin),
+        Box::new(cpp::Cpp::new()),
+        Box::new(swift::Swift),
     ]
 }
 
