@@ -8,6 +8,12 @@ Status: ready-for-human
 
 他の17言語はネイティブのクロージャ（無名関数）へ直接翻訳できるが、**Free Pascal 3.2.2 は匿名関数・関数参照（`reference to`）に非対応**（これらは FPC 3.3.1/trunk で導入）。そのため他バックエンドと同じ「λ→ネイティブ無名関数」戦略が使えない。
 
+### 経験的確認（fpc 3.2.2 / flake）
+
+- `{$mode delphi}` の `reference to function` → `Error: Identifier not found "reference"`
+- `{$modeswitch functionreferences}` / `{$modeswitch anonymousfunctions}` → `Warning: Illegal compiler switch`（スイッチ自体が存在しない）
+- 入れ子手続き（`is nested`）はスタックフレームを掴むため、関数を返して escape させると無効 → 真のクロージャにならない
+
 ## 方針の選択肢
 
 1. **クロージャ変換（closure conversion / defunctionalization）**
