@@ -15,6 +15,9 @@ impl Backend for Perl {
     fn prelude(&self) -> &'static str {
         include_str!("../../preludes/perl.pl")
     }
+    fn library(&self) -> Option<(String, String)> {
+        Some(("lam1.pl".into(), self.prelude().into()))
+    }
 
     fn mangle(&self, n: &str) -> String {
         format!("$_{}", n)
@@ -40,7 +43,7 @@ impl Backend for Perl {
     }
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String {
         let mut s = String::new();
-        s.push_str(self.prelude());
+        s.push_str("use strict;\nuse warnings;\nuse FindBin;\nrequire \"$FindBin::Bin/lam1.pl\";  # ヘルパーは lam1.pl\n");
         s.push_str("\n# --- definitions ---\n");
         for d in defs {
             s.push_str(d);

@@ -15,6 +15,9 @@ impl Backend for Racket {
     fn prelude(&self) -> &'static str {
         include_str!("../../preludes/racket.rkt")
     }
+    fn library(&self) -> Option<(String, String)> {
+        Some(("lam1.rkt".into(), self.prelude().into()))
+    }
 
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(lambda ({}) {})", param, body)
@@ -40,7 +43,7 @@ impl Backend for Racket {
     }
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String {
         let mut s = String::new();
-        s.push_str(self.prelude()); // 先頭に #lang racket を含む
+        s.push_str("#lang racket\n(require \"lam1.rkt\")  ; ヘルパーは lam1.rkt\n");
         s.push_str("\n;; --- definitions ---\n");
         for d in defs {
             s.push_str(d);

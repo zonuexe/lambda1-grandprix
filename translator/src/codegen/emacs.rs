@@ -18,6 +18,9 @@ impl Backend for Emacs {
     fn prelude(&self) -> &'static str {
         include_str!("../../preludes/emacs.el")
     }
+    fn library(&self) -> Option<(String, String)> {
+        Some(("lam1.el".into(), self.prelude().into()))
+    }
 
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(lambda ({}) {})", param, body)
@@ -43,7 +46,7 @@ impl Backend for Emacs {
     }
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String {
         let mut s = String::new();
-        s.push_str(self.prelude()); // 先頭に lexical-binding ヘッダを含む
+        s.push_str(";;; -*- lexical-binding: t; -*-\n(load-file \"lam1.el\")  ; ヘルパーは lam1.el\n");
         s.push_str("\n;; --- definitions ---\n");
         for d in defs {
             s.push_str(d);

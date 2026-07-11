@@ -15,6 +15,9 @@ impl Backend for Php {
     fn prelude(&self) -> &'static str {
         include_str!("../../preludes/php.php")
     }
+    fn library(&self) -> Option<(String, String)> {
+        Some(("lam1.php".into(), self.prelude().into()))
+    }
 
     // PHP の変数は `$` 始まり。ホスト関数名（encodeInt 等）には付けない。
     fn mangle(&self, n: &str) -> String {
@@ -41,7 +44,7 @@ impl Backend for Php {
     }
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String {
         let mut s = String::new();
-        s.push_str(self.prelude()); // 先頭に <?php を含む
+        s.push_str("<?php\nrequire __DIR__ . '/lam1.php';  // ヘルパーは lam1.php\n");
         s.push_str("\n// --- definitions ---\n");
         for d in defs {
             s.push_str(d);

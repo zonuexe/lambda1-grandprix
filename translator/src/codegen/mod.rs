@@ -47,6 +47,12 @@ pub trait Backend {
     fn emit_assert(&self, idx: usize, lhs: &str, rhs: &str) -> String;
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String;
 
+    /// ヘルパーを外部ライブラリファイルに分離する場合、(ファイル名, 内容) を返す。
+    /// None（既定）なら emit_program にヘルパーを同梱する自己完結方式。
+    fn library(&self) -> Option<(String, String)> {
+        None
+    }
+
     /// コンパイル段（計測外）。インタプリタ言語は既定の no-op。成功なら true。
     fn build(&self, _dir: &Path, _file: &Path) -> std::io::Result<bool> {
         Ok(true)
@@ -61,7 +67,11 @@ pub trait Backend {
             return Ok(false);
         }
         let argv = self.run_argv(dir, file);
-        let st = Command::new(&argv[0]).args(&argv[1..]).status()?;
+        // cwd を出力ディレクトリにして、分離した外部ライブラリの相対参照を解決する。
+        let st = Command::new(&argv[0])
+            .args(&argv[1..])
+            .current_dir(dir)
+            .status()?;
         Ok(st.success())
     }
 
@@ -138,8 +148,13 @@ fn emit_to_dir(be: &dyn Backend, prog: &Program, outdir: &Path) -> std::io::Resu
     let code = be.generate(prog);
     let dir = outdir.join(be.name());
     std::fs::create_dir_all(&dir)?;
+    // 絶対パス化（実行時に cwd を dir にするため、相対パスの二重解決を防ぐ）。
+    let dir = std::fs::canonicalize(&dir)?;
     let file = dir.join(format!("main.{}", be.ext()));
     std::fs::write(&file, code)?;
+    if let Some((libname, libcode)) = be.library() {
+        std::fs::write(dir.join(libname), libcode)?;
+    }
     Ok((dir, file))
 }
 
@@ -168,6 +183,7 @@ pub fn bench_backend(be: &dyn Backend, prog: &Program, outdir: &Path) -> std::io
         let out = Command::new("/usr/bin/time")
             .arg("-l")
             .args(&argv)
+            .current_dir(&dir)
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
             .output()?;

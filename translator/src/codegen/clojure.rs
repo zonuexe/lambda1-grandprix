@@ -15,6 +15,9 @@ impl Backend for Clojure {
     fn prelude(&self) -> &'static str {
         include_str!("../../preludes/clojure.clj")
     }
+    fn library(&self) -> Option<(String, String)> {
+        Some(("lam1.clj".into(), self.prelude().into()))
+    }
 
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(fn [{}] {})", param, body)
@@ -40,7 +43,7 @@ impl Backend for Clojure {
     }
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String {
         let mut s = String::new();
-        s.push_str(self.prelude());
+        s.push_str("(load-file \"lam1.clj\")  ; ヘルパーは lam1.clj\n");
         s.push_str("\n;; --- definitions ---\n");
         for d in defs {
             s.push_str(d);

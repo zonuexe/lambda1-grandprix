@@ -95,6 +95,13 @@ fn gen(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, dsl_src: &s
             Ok(()) => println!("wrote {}", file.display()),
             Err(e) => eprintln!("{}: {}", be.name(), e),
         }
+        // ヘルパーを外部ライブラリに分離する言語は、そのファイルも並べて出力。
+        if let Some((libname, libcode)) = be.library() {
+            let libpath = dir.join(&libname);
+            if std::fs::write(&libpath, libcode).is_ok() {
+                println!("wrote {}", libpath.display());
+            }
+        }
     }
     // 元の DSL ソースも並べておく（対比用）。
     let src_path = root.join("source.lam");

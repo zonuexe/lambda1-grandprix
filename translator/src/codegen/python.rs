@@ -15,6 +15,9 @@ impl Backend for Python {
     fn prelude(&self) -> &'static str {
         include_str!("../../preludes/python.py")
     }
+    fn library(&self) -> Option<(String, String)> {
+        Some(("lam1.py".into(), self.prelude().into()))
+    }
 
     fn emit_lam(&self, param: &str, body: &str) -> String {
         // 適用時に body が誤結合しないよう常に括弧で包む
@@ -37,7 +40,7 @@ impl Backend for Python {
     }
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String {
         let mut s = String::new();
-        s.push_str(self.prelude());
+        s.push_str("from lam1 import *  # ヘルパーは lam1.py\n");
         s.push_str("\n# --- definitions ---\n");
         for d in defs {
             s.push_str(d);

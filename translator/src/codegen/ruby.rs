@@ -15,6 +15,9 @@ impl Backend for Ruby {
     fn prelude(&self) -> &'static str {
         include_str!("../../preludes/ruby.rb")
     }
+    fn library(&self) -> Option<(String, String)> {
+        Some(("lam1.rb".into(), self.prelude().into()))
+    }
 
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(->({}) {{ {} }})", param, body)
@@ -36,7 +39,7 @@ impl Backend for Ruby {
     }
     fn emit_program(&self, defs: &[String], asserts: &[String]) -> String {
         let mut s = String::new();
-        s.push_str(self.prelude());
+        s.push_str("require_relative 'lam1'  # ヘルパーは lam1.rb\n");
         s.push_str("\n# --- definitions ---\n");
         for d in defs {
             s.push_str(d);
