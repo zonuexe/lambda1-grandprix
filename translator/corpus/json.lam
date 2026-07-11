@@ -1,0 +1,19 @@
+# λ-1 JSON 層コーパス（型付き値。ADR-0005）
+# DSL ライブラリ: 構造は純ラムダの pair / Scott リスト(nil/cons) で組む
+
+pair  = λa.λb.λs.s a b
+nil   = λn.λc.n
+cons  = λh.λt.λn.λc.c h t
+true  = λt.λf.t
+false = λt.λf.f
+
+---
+
+assert '1'         == decodeJson[ jInt[1] ]
+assert 'true'      == decodeJson[ jBool[true] ]
+assert 'false'     == decodeJson[ jBool[false] ]
+assert '"hi"'      == decodeJson[ jStr['hi'] ]
+assert 'null'      == decodeJson[ jNull[] ]
+assert '[1,true]'  == decodeJson[ jArr[ cons (jInt[1]) (cons (jBool[true]) nil) ] ]
+assert '{"k":1}'   == decodeJson[ jObj[ cons (pair (jStr['k']) (jInt[1])) nil ] ]
+assert '[1,[2,3]]' == decodeJson[ jArr[ cons (jInt[1]) (cons (jArr[ cons (jInt[2]) (cons (jInt[3]) nil) ]) nil) ] ]
