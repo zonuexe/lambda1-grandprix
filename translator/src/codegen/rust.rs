@@ -66,7 +66,10 @@ impl Backend for Rust {
         format!("{}({})", name, args.join(", "))
     }
     fn emit_str(&self, s: &str) -> String {
-        format!("\"{}\".to_string()", s)
+        format!(
+            "\"{}\".to_string()",
+            s.replace('\\', "\\\\").replace('"', "\\\"")
+        )
     }
     fn emit_def(&self, name: &str, term: &str) -> String {
         format!("let {}: D = {};", name, term)

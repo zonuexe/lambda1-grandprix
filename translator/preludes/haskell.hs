@@ -2,6 +2,7 @@
 module Main where
 
 import System.Exit (exitFailure)
+import Data.List (intercalate)
 
 -- 万能型（タグ付き union）。ラムダ世界の値は常に Fun。
 -- 地の構築子 Num/Str は encode/decode の境界でのみ現れる。
@@ -38,3 +39,67 @@ check label a b =
   if a == b
     then putStrLn ("ok   " ++ label) >> return True
     else putStrLn ("FAIL " ++ label ++ ": " ++ show a ++ " /= " ++ show b) >> return False
+
+-- ============ JSON 層（型付き値。ADR-0005） ============
+jK :: D
+jK = Fun (\a -> Fun (\_ -> a))
+jKI :: D
+jKI = Fun (\_ -> Fun (\b -> b))
+mkpair :: D -> D -> D
+mkpair a b = Fun (\s -> app (app s a) b)
+fstp :: D -> D
+fstp p = app p jK
+sndp :: D -> D
+sndp p = app p jKI
+churchToInt :: D -> Int
+churchToInt c = case app (app c incr) (Num 0) of Num k -> k; _ -> error "churchToInt"
+cTrue :: D
+cTrue = Fun (\t -> Fun (\_ -> t))
+cFalse :: D
+cFalse = Fun (\_ -> Fun (\f -> f))
+boolToHost :: D -> Bool
+boolToHost c = case app (app c (Str "T")) (Str "F") of Str "T" -> True; _ -> False
+nilH :: D
+nilH = Fun (\n -> Fun (\_ -> n))
+consH :: D -> D -> D
+consH h t = Fun (\_ -> Fun (\c -> app (app c h) t))
+isNil :: D -> Bool
+isNil lst = boolToHost (app (app lst cTrue) (Fun (\_ -> Fun (\_ -> cFalse))))
+headL :: D -> D
+headL lst = app (app lst (Str "")) (Fun (\h -> Fun (\_ -> h)))
+tailL :: D -> D
+tailL lst = app (app lst (Str "")) (Fun (\_ -> Fun (\t -> t)))
+walkL :: D -> [D]
+walkL lst = if isNil lst then [] else headL lst : walkL (tailL lst)
+
+jInt :: Int -> D
+jInt n = mkpair (encodeInt 1) (encodeInt n)
+jBool :: D -> D
+jBool b = mkpair (encodeInt 2) b
+jStr :: String -> D
+jStr s = mkpair (encodeInt 3) (foldr (\ch lst -> consH (encodeInt (fromEnum ch)) lst) nilH s)
+jArr :: D -> D
+jArr lst = mkpair (encodeInt 4) lst
+jObj :: D -> D
+jObj lst = mkpair (encodeInt 5) lst
+jNull :: D
+jNull = mkpair (encodeInt 6) (Fun (\x -> x))
+
+jsonEscape :: String -> String
+jsonEscape s = "\"" ++ concatMap esc s ++ "\""
+  where esc '"' = "\\\""
+        esc '\\' = "\\\\"
+        esc c = [c]
+
+decodeJson :: D -> String
+decodeJson v =
+  let tag = churchToInt (fstp v)
+      payload = sndp v
+  in case tag of
+       1 -> show (churchToInt payload)
+       2 -> if boolToHost payload then "true" else "false"
+       3 -> jsonEscape (map (toEnum . churchToInt) (walkL payload))
+       4 -> "[" ++ intercalate "," (map decodeJson (walkL payload)) ++ "]"
+       5 -> "{" ++ intercalate "," (map (\pr -> decodeJson (fstp pr) ++ ":" ++ decodeJson (sndp pr)) (walkL payload)) ++ "}"
+       6 -> "null"
+       _ -> "?"

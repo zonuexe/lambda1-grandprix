@@ -31,7 +31,7 @@ impl Backend for Haskell {
         }
     }
     fn emit_str(&self, s: &str) -> String {
-        format!("\"{}\"", s)
+        format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
     }
     fn emit_def(&self, name: &str, term: &str) -> String {
         format!("{} = {}", name, term)
