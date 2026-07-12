@@ -68,28 +68,28 @@ fn check(label: &str, a: String, b: String) -> i32 {
 
 fn main() {
     let mut _failures = 0;
-    let _pair: D = { lam(move |_a| { let _a = _a.clone(); lam(move |_b| { let _a = _a.clone(); let _b = _b.clone(); lam(move |_s| _s.clone().app(_a.clone()).app(_b.clone())) }) }) };
-    let _nil: D = { lam(move |_n| { let _n = _n.clone(); lam(move |_c| _n.clone()) }) };
-    let _cons: D = { lam(move |_h| { let _h = _h.clone(); lam(move |_t| { let _h = _h.clone(); let _t = _t.clone(); lam(move |_n| { let _h = _h.clone(); let _t = _t.clone(); lam(move |_c| _c.clone().app(_h.clone()).app(_t.clone())) }) }) }) };
-    let _true: D = { lam(move |_t| { let _t = _t.clone(); lam(move |_f| _t.clone()) }) };
-    let _false: D = { lam(move |_t| { lam(move |_f| _f.clone()) }) };
-    let _snd: D = { let _false = _false.clone(); lam(move |_p| _p.clone().app(_false.clone())) };
-    let _one: D = { lam(move |_f| { let _f = _f.clone(); lam(move |_x| _f.clone().app(_x.clone())) }) };
-    let _pred: D = { lam(move |_n| { let _n = _n.clone(); lam(move |_f| { let _f = _f.clone(); let _n = _n.clone(); lam(move |_x| _n.clone().app({ let _f = _f.clone(); lam(move |_g| { let _f = _f.clone(); let _g = _g.clone(); lam(move |_h| _h.clone().app(_g.clone().app(_f.clone()))) }) }).app({ let _x = _x.clone(); lam(move |_u| _x.clone()) }).app({ lam(move |_u| _u.clone()) })) }) }) };
-    let _tint: D = { let _one = _one.clone(); let _pair = _pair.clone(); lam(move |_k| _pair.clone().app(_one.clone()).app(_k.clone())) };
-    let _step: D = { let _cons = _cons.clone(); let _pair = _pair.clone(); let _pred = _pred.clone(); let _tint = _tint.clone(); lam(move |_p| _p.clone().app({ let _cons = _cons.clone(); let _pair = _pair.clone(); let _pred = _pred.clone(); let _tint = _tint.clone(); lam(move |_k| { let _cons = _cons.clone(); let _k = _k.clone(); let _pair = _pair.clone(); let _pred = _pred.clone(); let _tint = _tint.clone(); lam(move |_l| _pair.clone().app(_pred.clone().app(_k.clone())).app(_cons.clone().app(_tint.clone().app(_k.clone())).app(_l.clone()))) }) })) };
-    let _range: D = { let _nil = _nil.clone(); let _pair = _pair.clone(); let _snd = _snd.clone(); let _step = _step.clone(); lam(move |_n| _snd.clone().app(_n.clone().app(_step.clone()).app(_pair.clone().app(_n.clone()).app(_nil.clone())))) };
+    let pair: D = { lam(move |a| { let a = a.clone(); lam(move |b| { let a = a.clone(); let b = b.clone(); lam(move |s| s.clone().app(a.clone()).app(b.clone())) }) }) };
+    let nil: D = { lam(move |n| { let n = n.clone(); lam(move |c| n.clone()) }) };
+    let cons: D = { lam(move |h| { let h = h.clone(); lam(move |t| { let h = h.clone(); let t = t.clone(); lam(move |n| { let h = h.clone(); let t = t.clone(); lam(move |c| c.clone().app(h.clone()).app(t.clone())) }) }) }) };
+    let _true: D = { lam(move |t| { let t = t.clone(); lam(move |f| t.clone()) }) };
+    let _false: D = { lam(move |t| { lam(move |f| f.clone()) }) };
+    let snd: D = { let _false = _false.clone(); lam(move |p| p.clone().app(_false.clone())) };
+    let one: D = { lam(move |f| { let f = f.clone(); lam(move |x| f.clone().app(x.clone())) }) };
+    let pred: D = { lam(move |n| { let n = n.clone(); lam(move |f| { let f = f.clone(); let n = n.clone(); lam(move |x| n.clone().app({ let f = f.clone(); lam(move |g| { let f = f.clone(); let g = g.clone(); lam(move |h| h.clone().app(g.clone().app(f.clone()))) }) }).app({ let x = x.clone(); lam(move |u| x.clone()) }).app({ lam(move |u| u.clone()) })) }) }) };
+    let tint: D = { let one = one.clone(); let pair = pair.clone(); lam(move |k| pair.clone().app(one.clone()).app(k.clone())) };
+    let step: D = { let cons = cons.clone(); let pair = pair.clone(); let pred = pred.clone(); let tint = tint.clone(); lam(move |p| p.clone().app({ let cons = cons.clone(); let pair = pair.clone(); let pred = pred.clone(); let tint = tint.clone(); lam(move |k| { let cons = cons.clone(); let k = k.clone(); let pair = pair.clone(); let pred = pred.clone(); let tint = tint.clone(); lam(move |l| pair.clone().app(pred.clone().app(k.clone())).app(cons.clone().app(tint.clone().app(k.clone())).app(l.clone()))) }) })) };
+    let range: D = { let nil = nil.clone(); let pair = pair.clone(); let snd = snd.clone(); let step = step.clone(); lam(move |n| snd.clone().app(n.clone().app(step.clone()).app(pair.clone().app(n.clone()).app(nil.clone())))) };
     _failures += check("assert 1", "1".to_string(), decodeJson(jInt(1)));
     _failures += check("assert 2", "true".to_string(), decodeJson(jBool(_true.clone())));
     _failures += check("assert 3", "false".to_string(), decodeJson(jBool(_false.clone())));
     _failures += check("assert 4", "\"hi\"".to_string(), decodeJson(jStr("hi".to_string())));
     _failures += check("assert 5", "null".to_string(), decodeJson(jNull()));
-    _failures += check("assert 6", "[1,true]".to_string(), decodeJson(jArr(_cons.clone().app(jInt(1)).app(_cons.clone().app(jBool(_true.clone())).app(_nil.clone())))));
-    _failures += check("assert 7", "{\"k\":1}".to_string(), decodeJson(jObj(_cons.clone().app(_pair.clone().app(jStr("k".to_string())).app(jInt(1))).app(_nil.clone()))));
-    _failures += check("assert 8", "[1,[2,3]]".to_string(), decodeJson(jArr(_cons.clone().app(jInt(1)).app(_cons.clone().app(jArr(_cons.clone().app(jInt(2)).app(_cons.clone().app(jInt(3)).app(_nil.clone())))).app(_nil.clone())))));
-    _failures += check("assert 9", "[]".to_string(), decodeJson(jArr(_range.clone().app(encodeInt(0)))));
-    _failures += check("assert 10", "[1]".to_string(), decodeJson(jArr(_range.clone().app(encodeInt(1)))));
-    _failures += check("assert 11", "[1,2,3]".to_string(), decodeJson(jArr(_range.clone().app(encodeInt(3)))));
+    _failures += check("assert 6", "[1,true]".to_string(), decodeJson(jArr(cons.clone().app(jInt(1)).app(cons.clone().app(jBool(_true.clone())).app(nil.clone())))));
+    _failures += check("assert 7", "{\"k\":1}".to_string(), decodeJson(jObj(cons.clone().app(pair.clone().app(jStr("k".to_string())).app(jInt(1))).app(nil.clone()))));
+    _failures += check("assert 8", "[1,[2,3]]".to_string(), decodeJson(jArr(cons.clone().app(jInt(1)).app(cons.clone().app(jArr(cons.clone().app(jInt(2)).app(cons.clone().app(jInt(3)).app(nil.clone())))).app(nil.clone())))));
+    _failures += check("assert 9", "[]".to_string(), decodeJson(jArr(range.clone().app(encodeInt(0)))));
+    _failures += check("assert 10", "[1]".to_string(), decodeJson(jArr(range.clone().app(encodeInt(1)))));
+    _failures += check("assert 11", "[1,2,3]".to_string(), decodeJson(jArr(range.clone().app(encodeInt(3)))));
     if _failures > 0 {
         println!("{} failure(s)", _failures);
         std::process::exit(1);

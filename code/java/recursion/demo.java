@@ -4,15 +4,15 @@ import java.util.function.Function;
 class Main {
     static int _failures = 0;
 
-    static final D _Z = new Fun(_f -> new Fun(_x -> _f.apply(new Fun(_v -> _x.apply(_x).apply(_v)))).apply(new Fun(_x -> _f.apply(new Fun(_v -> _x.apply(_x).apply(_v))))));
-    static final D _one = new Fun(_f -> new Fun(_x -> _f.apply(_x)));
-    static final D _mult = new Fun(_m -> new Fun(_n -> new Fun(_f -> _m.apply(_n.apply(_f)))));
-    static final D _pred = new Fun(_n -> new Fun(_f -> new Fun(_x -> _n.apply(new Fun(_g -> new Fun(_h -> _h.apply(_g.apply(_f))))).apply(new Fun(_u -> _x)).apply(new Fun(_u -> _u)))));
-    static final D _true = new Fun(_t -> new Fun(_f -> _t));
-    static final D _false = new Fun(_t -> new Fun(_f -> _f));
-    static final D _isZero = new Fun(_n -> _n.apply(new Fun(_x -> _false)).apply(_true));
-    static final D _fstep = new Fun(_rec -> new Fun(_n -> _isZero.apply(_n).apply(new Fun(_u -> _one)).apply(new Fun(_u -> _mult.apply(_n).apply(_rec.apply(_pred.apply(_n))))).apply(_n)));
-    static final D _fact = _Z.apply(_fstep);
+    static final D Z = new Fun(f -> new Fun(x -> f.apply(new Fun(v -> x.apply(x).apply(v)))).apply(new Fun(x -> f.apply(new Fun(v -> x.apply(x).apply(v))))));
+    static final D one = new Fun(f -> new Fun(x -> f.apply(x)));
+    static final D mult = new Fun(m -> new Fun(n -> new Fun(f -> m.apply(n.apply(f)))));
+    static final D pred = new Fun(n -> new Fun(f -> new Fun(x -> n.apply(new Fun(g -> new Fun(h -> h.apply(g.apply(f))))).apply(new Fun(u -> x)).apply(new Fun(u -> u)))));
+    static final D _true = new Fun(t -> new Fun(f -> t));
+    static final D _false = new Fun(t -> new Fun(f -> f));
+    static final D isZero = new Fun(n -> n.apply(new Fun(x -> _false)).apply(_true));
+    static final D fstep = new Fun(rec -> new Fun(n -> isZero.apply(n).apply(new Fun(u -> one)).apply(new Fun(u -> mult.apply(n).apply(rec.apply(pred.apply(n))))).apply(n)));
+    static final D fact = Z.apply(fstep);
 
     static D encodeInt(int n) {              // host int -> チャーチ数（Fun）
         return new Fun(f -> new Fun(x -> {
@@ -124,11 +124,11 @@ class Main {
     }
 
     public static void main(String[] args) {
-        check("assert 1", "1", decodeInt(_fact.apply(encodeInt(0))));
-        check("assert 2", "1", decodeInt(_fact.apply(encodeInt(1))));
-        check("assert 3", "2", decodeInt(_fact.apply(encodeInt(2))));
-        check("assert 4", "6", decodeInt(_fact.apply(encodeInt(3))));
-        check("assert 5", "120", decodeInt(_fact.apply(encodeInt(5))));
+        check("assert 1", "1", decodeInt(fact.apply(encodeInt(0))));
+        check("assert 2", "1", decodeInt(fact.apply(encodeInt(1))));
+        check("assert 3", "2", decodeInt(fact.apply(encodeInt(2))));
+        check("assert 4", "6", decodeInt(fact.apply(encodeInt(3))));
+        check("assert 5", "120", decodeInt(fact.apply(encodeInt(5))));
         if (_failures > 0) {
             System.out.println(_failures + " failure(s)");
             System.exit(1);

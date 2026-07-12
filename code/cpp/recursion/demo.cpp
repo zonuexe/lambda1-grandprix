@@ -143,22 +143,22 @@ std::string decodeJson(D v) {
     return "?";
 }
 
-D _Z = D(Fn([](D _f) { return D(Fn([_f](D _x) { return _f.apply(D(Fn([_x](D _v) { return _x.apply(_x).apply(_v); }))); })).apply(D(Fn([_f](D _x) { return _f.apply(D(Fn([_x](D _v) { return _x.apply(_x).apply(_v); }))); }))); }));
-D _one = D(Fn([](D _f) { return D(Fn([_f](D _x) { return _f.apply(_x); })); }));
-D _mult = D(Fn([](D _m) { return D(Fn([_m](D _n) { return D(Fn([_m, _n](D _f) { return _m.apply(_n.apply(_f)); })); })); }));
-D _pred = D(Fn([](D _n) { return D(Fn([_n](D _f) { return D(Fn([_f, _n](D _x) { return _n.apply(D(Fn([_f](D _g) { return D(Fn([_f, _g](D _h) { return _h.apply(_g.apply(_f)); })); }))).apply(D(Fn([_x](D _u) { return _x; }))).apply(D(Fn([](D _u) { return _u; }))); })); })); }));
-D _true = D(Fn([](D _t) { return D(Fn([_t](D _f) { return _t; })); }));
-D _false = D(Fn([](D _t) { return D(Fn([](D _f) { return _f; })); }));
-D _isZero = D(Fn([](D _n) { return _n.apply(D(Fn([](D _x) { return _false; }))).apply(_true); }));
-D _fstep = D(Fn([](D _rec) { return D(Fn([_rec](D _n) { return _isZero.apply(_n).apply(D(Fn([](D _u) { return _one; }))).apply(D(Fn([_n, _rec](D _u) { return _mult.apply(_n).apply(_rec.apply(_pred.apply(_n))); }))).apply(_n); })); }));
-D _fact = _Z.apply(_fstep);
+D Z = D(Fn([](D f) { return D(Fn([f](D x) { return f.apply(D(Fn([x](D v) { return x.apply(x).apply(v); }))); })).apply(D(Fn([f](D x) { return f.apply(D(Fn([x](D v) { return x.apply(x).apply(v); }))); }))); }));
+D one = D(Fn([](D f) { return D(Fn([f](D x) { return f.apply(x); })); }));
+D mult = D(Fn([](D m) { return D(Fn([m](D n) { return D(Fn([m, n](D f) { return m.apply(n.apply(f)); })); })); }));
+D pred = D(Fn([](D n) { return D(Fn([n](D f) { return D(Fn([f, n](D x) { return n.apply(D(Fn([f](D g) { return D(Fn([f, g](D h) { return h.apply(g.apply(f)); })); }))).apply(D(Fn([x](D u) { return x; }))).apply(D(Fn([](D u) { return u; }))); })); })); }));
+D _true = D(Fn([](D t) { return D(Fn([t](D f) { return t; })); }));
+D _false = D(Fn([](D t) { return D(Fn([](D f) { return f; })); }));
+D isZero = D(Fn([](D n) { return n.apply(D(Fn([](D x) { return _false; }))).apply(_true); }));
+D fstep = D(Fn([](D rec) { return D(Fn([rec](D n) { return isZero.apply(n).apply(D(Fn([](D u) { return one; }))).apply(D(Fn([n, rec](D u) { return mult.apply(n).apply(rec.apply(pred.apply(n))); }))).apply(n); })); }));
+D fact = Z.apply(fstep);
 
 int main() {
-    check("assert 1", "1", decodeInt(_fact.apply(encodeInt(0))));
-    check("assert 2", "1", decodeInt(_fact.apply(encodeInt(1))));
-    check("assert 3", "2", decodeInt(_fact.apply(encodeInt(2))));
-    check("assert 4", "6", decodeInt(_fact.apply(encodeInt(3))));
-    check("assert 5", "120", decodeInt(_fact.apply(encodeInt(5))));
+    check("assert 1", "1", decodeInt(fact.apply(encodeInt(0))));
+    check("assert 2", "1", decodeInt(fact.apply(encodeInt(1))));
+    check("assert 3", "2", decodeInt(fact.apply(encodeInt(2))));
+    check("assert 4", "6", decodeInt(fact.apply(encodeInt(3))));
+    check("assert 5", "120", decodeInt(fact.apply(encodeInt(5))));
     if (_failures > 0) { std::cout << _failures << " failure(s)\n"; return 1; }
     std::cout << "all green\n";
     return 0;

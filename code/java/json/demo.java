@@ -4,17 +4,17 @@ import java.util.function.Function;
 class Main {
     static int _failures = 0;
 
-    static final D _pair = new Fun(_a -> new Fun(_b -> new Fun(_s -> _s.apply(_a).apply(_b))));
-    static final D _nil = new Fun(_n -> new Fun(_c -> _n));
-    static final D _cons = new Fun(_h -> new Fun(_t -> new Fun(_n -> new Fun(_c -> _c.apply(_h).apply(_t)))));
-    static final D _true = new Fun(_t -> new Fun(_f -> _t));
-    static final D _false = new Fun(_t -> new Fun(_f -> _f));
-    static final D _snd = new Fun(_p -> _p.apply(_false));
-    static final D _one = new Fun(_f -> new Fun(_x -> _f.apply(_x)));
-    static final D _pred = new Fun(_n -> new Fun(_f -> new Fun(_x -> _n.apply(new Fun(_g -> new Fun(_h -> _h.apply(_g.apply(_f))))).apply(new Fun(_u -> _x)).apply(new Fun(_u -> _u)))));
-    static final D _tint = new Fun(_k -> _pair.apply(_one).apply(_k));
-    static final D _step = new Fun(_p -> _p.apply(new Fun(_k -> new Fun(_l -> _pair.apply(_pred.apply(_k)).apply(_cons.apply(_tint.apply(_k)).apply(_l))))));
-    static final D _range = new Fun(_n -> _snd.apply(_n.apply(_step).apply(_pair.apply(_n).apply(_nil))));
+    static final D pair = new Fun(a -> new Fun(b -> new Fun(s -> s.apply(a).apply(b))));
+    static final D nil = new Fun(n -> new Fun(c -> n));
+    static final D cons = new Fun(h -> new Fun(t -> new Fun(n -> new Fun(c -> c.apply(h).apply(t)))));
+    static final D _true = new Fun(t -> new Fun(f -> t));
+    static final D _false = new Fun(t -> new Fun(f -> f));
+    static final D snd = new Fun(p -> p.apply(_false));
+    static final D one = new Fun(f -> new Fun(x -> f.apply(x)));
+    static final D pred = new Fun(n -> new Fun(f -> new Fun(x -> n.apply(new Fun(g -> new Fun(h -> h.apply(g.apply(f))))).apply(new Fun(u -> x)).apply(new Fun(u -> u)))));
+    static final D tint = new Fun(k -> pair.apply(one).apply(k));
+    static final D step = new Fun(p -> p.apply(new Fun(k -> new Fun(l -> pair.apply(pred.apply(k)).apply(cons.apply(tint.apply(k)).apply(l))))));
+    static final D range = new Fun(n -> snd.apply(n.apply(step).apply(pair.apply(n).apply(nil))));
 
     static D encodeInt(int n) {              // host int -> チャーチ数（Fun）
         return new Fun(f -> new Fun(x -> {
@@ -131,12 +131,12 @@ class Main {
         check("assert 3", "false", decodeJson(jBool(_false)));
         check("assert 4", "\"hi\"", decodeJson(jStr("hi")));
         check("assert 5", "null", decodeJson(jNull()));
-        check("assert 6", "[1,true]", decodeJson(jArr(_cons.apply(jInt(1)).apply(_cons.apply(jBool(_true)).apply(_nil)))));
-        check("assert 7", "{\"k\":1}", decodeJson(jObj(_cons.apply(_pair.apply(jStr("k")).apply(jInt(1))).apply(_nil))));
-        check("assert 8", "[1,[2,3]]", decodeJson(jArr(_cons.apply(jInt(1)).apply(_cons.apply(jArr(_cons.apply(jInt(2)).apply(_cons.apply(jInt(3)).apply(_nil)))).apply(_nil)))));
-        check("assert 9", "[]", decodeJson(jArr(_range.apply(encodeInt(0)))));
-        check("assert 10", "[1]", decodeJson(jArr(_range.apply(encodeInt(1)))));
-        check("assert 11", "[1,2,3]", decodeJson(jArr(_range.apply(encodeInt(3)))));
+        check("assert 6", "[1,true]", decodeJson(jArr(cons.apply(jInt(1)).apply(cons.apply(jBool(_true)).apply(nil)))));
+        check("assert 7", "{\"k\":1}", decodeJson(jObj(cons.apply(pair.apply(jStr("k")).apply(jInt(1))).apply(nil))));
+        check("assert 8", "[1,[2,3]]", decodeJson(jArr(cons.apply(jInt(1)).apply(cons.apply(jArr(cons.apply(jInt(2)).apply(cons.apply(jInt(3)).apply(nil)))).apply(nil)))));
+        check("assert 9", "[]", decodeJson(jArr(range.apply(encodeInt(0)))));
+        check("assert 10", "[1]", decodeJson(jArr(range.apply(encodeInt(1)))));
+        check("assert 11", "[1,2,3]", decodeJson(jArr(range.apply(encodeInt(3)))));
         if (_failures > 0) {
             System.out.println(_failures + " failure(s)");
             System.exit(1);

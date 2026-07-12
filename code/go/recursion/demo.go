@@ -159,22 +159,22 @@ func decodeJson(v D) string {
 	return "?"
 }
 
-var _Z D = Fun(func(_f D) D { return app(Fun(func(_x D) D { return app(_f, Fun(func(_v D) D { return app(app(_x, _x), _v) })) }), Fun(func(_x D) D { return app(_f, Fun(func(_v D) D { return app(app(_x, _x), _v) })) })) })
-var _one D = Fun(func(_f D) D { return Fun(func(_x D) D { return app(_f, _x) }) })
-var _mult D = Fun(func(_m D) D { return Fun(func(_n D) D { return Fun(func(_f D) D { return app(_m, app(_n, _f)) }) }) })
-var _pred D = Fun(func(_n D) D { return Fun(func(_f D) D { return Fun(func(_x D) D { return app(app(app(_n, Fun(func(_g D) D { return Fun(func(_h D) D { return app(_h, app(_g, _f)) }) })), Fun(func(_u D) D { return _x })), Fun(func(_u D) D { return _u })) }) }) })
-var _true D = Fun(func(_t D) D { return Fun(func(_f D) D { return _t }) })
-var _false D = Fun(func(_t D) D { return Fun(func(_f D) D { return _f }) })
-var _isZero D = Fun(func(_n D) D { return app(app(_n, Fun(func(_x D) D { return _false })), _true) })
-var _fstep D = Fun(func(_rec D) D { return Fun(func(_n D) D { return app(app(app(app(_isZero, _n), Fun(func(_u D) D { return _one })), Fun(func(_u D) D { return app(app(_mult, _n), app(_rec, app(_pred, _n))) })), _n) }) })
-var _fact D = app(_Z, _fstep)
+var Z D = Fun(func(f D) D { return app(Fun(func(x D) D { return app(f, Fun(func(v D) D { return app(app(x, x), v) })) }), Fun(func(x D) D { return app(f, Fun(func(v D) D { return app(app(x, x), v) })) })) })
+var one D = Fun(func(f D) D { return Fun(func(x D) D { return app(f, x) }) })
+var mult D = Fun(func(m D) D { return Fun(func(n D) D { return Fun(func(f D) D { return app(m, app(n, f)) }) }) })
+var pred D = Fun(func(n D) D { return Fun(func(f D) D { return Fun(func(x D) D { return app(app(app(n, Fun(func(g D) D { return Fun(func(h D) D { return app(h, app(g, f)) }) })), Fun(func(u D) D { return x })), Fun(func(u D) D { return u })) }) }) })
+var _true D = Fun(func(t D) D { return Fun(func(f D) D { return t }) })
+var _false D = Fun(func(t D) D { return Fun(func(f D) D { return f }) })
+var isZero D = Fun(func(n D) D { return app(app(n, Fun(func(x D) D { return _false })), _true) })
+var fstep D = Fun(func(rec D) D { return Fun(func(n D) D { return app(app(app(app(isZero, n), Fun(func(u D) D { return one })), Fun(func(u D) D { return app(app(mult, n), app(rec, app(pred, n))) })), n) }) })
+var fact D = app(Z, fstep)
 
 func main() {
-	check("assert 1", "1", decodeInt(app(_fact, encodeInt(0))))
-	check("assert 2", "1", decodeInt(app(_fact, encodeInt(1))))
-	check("assert 3", "2", decodeInt(app(_fact, encodeInt(2))))
-	check("assert 4", "6", decodeInt(app(_fact, encodeInt(3))))
-	check("assert 5", "120", decodeInt(app(_fact, encodeInt(5))))
+	check("assert 1", "1", decodeInt(app(fact, encodeInt(0))))
+	check("assert 2", "1", decodeInt(app(fact, encodeInt(1))))
+	check("assert 3", "2", decodeInt(app(fact, encodeInt(2))))
+	check("assert 4", "6", decodeInt(app(fact, encodeInt(3))))
+	check("assert 5", "120", decodeInt(app(fact, encodeInt(5))))
 	if _failures > 0 {
 		fmt.Printf("%d failure(s)\n", _failures)
 		os.Exit(1)

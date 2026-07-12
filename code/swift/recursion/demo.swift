@@ -128,20 +128,20 @@ func decodeJson(_ v: D) -> String {
     }
 }
 
-let _Z: D = .fun { _f in app(.fun { _x in app(_f, .fun { _v in app(app(_x, _x), _v) }) }, .fun { _x in app(_f, .fun { _v in app(app(_x, _x), _v) }) }) }
-let _one: D = .fun { _f in .fun { _x in app(_f, _x) } }
-let _mult: D = .fun { _m in .fun { _n in .fun { _f in app(_m, app(_n, _f)) } } }
-let _pred: D = .fun { _n in .fun { _f in .fun { _x in app(app(app(_n, .fun { _g in .fun { _h in app(_h, app(_g, _f)) } }), .fun { _u in _x }), .fun { _u in _u }) } } }
-let _true: D = .fun { _t in .fun { _f in _t } }
-let _false: D = .fun { _t in .fun { _f in _f } }
-let _isZero: D = .fun { _n in app(app(_n, .fun { _x in _false }), _true) }
-let _fstep: D = .fun { _rec in .fun { _n in app(app(app(app(_isZero, _n), .fun { _u in _one }), .fun { _u in app(app(_mult, _n), app(_rec, app(_pred, _n))) }), _n) } }
-let _fact: D = app(_Z, _fstep)
+let Z: D = .fun { f in app(.fun { x in app(f, .fun { v in app(app(x, x), v) }) }, .fun { x in app(f, .fun { v in app(app(x, x), v) }) }) }
+let one: D = .fun { f in .fun { x in app(f, x) } }
+let mult: D = .fun { m in .fun { n in .fun { f in app(m, app(n, f)) } } }
+let pred: D = .fun { n in .fun { f in .fun { x in app(app(app(n, .fun { g in .fun { h in app(h, app(g, f)) } }), .fun { u in x }), .fun { u in u }) } } }
+let _true: D = .fun { t in .fun { f in t } }
+let _false: D = .fun { t in .fun { f in f } }
+let isZero: D = .fun { n in app(app(n, .fun { x in _false }), _true) }
+let fstep: D = .fun { rec in .fun { n in app(app(app(app(isZero, n), .fun { u in one }), .fun { u in app(app(mult, n), app(rec, app(pred, n))) }), n) } }
+let fact: D = app(Z, fstep)
 
-check("assert 1", "1", decodeInt(app(_fact, encodeInt(0))))
-check("assert 2", "1", decodeInt(app(_fact, encodeInt(1))))
-check("assert 3", "2", decodeInt(app(_fact, encodeInt(2))))
-check("assert 4", "6", decodeInt(app(_fact, encodeInt(3))))
-check("assert 5", "120", decodeInt(app(_fact, encodeInt(5))))
+check("assert 1", "1", decodeInt(app(fact, encodeInt(0))))
+check("assert 2", "1", decodeInt(app(fact, encodeInt(1))))
+check("assert 3", "2", decodeInt(app(fact, encodeInt(2))))
+check("assert 4", "6", decodeInt(app(fact, encodeInt(3))))
+check("assert 5", "120", decodeInt(app(fact, encodeInt(5))))
 if _failures > 0 { print("\(_failures) failure(s)"); exit(1) }
 print("all green")

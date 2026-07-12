@@ -106,22 +106,22 @@ def decodeJson(v: D): String = {
   }
 }
 
-val _Z: D = Fun(_f => app(Fun(_x => app(_f, Fun(_v => app(app(_x, _x), _v)))), Fun(_x => app(_f, Fun(_v => app(app(_x, _x), _v))))))
-val _one: D = Fun(_f => Fun(_x => app(_f, _x)))
-val _mult: D = Fun(_m => Fun(_n => Fun(_f => app(_m, app(_n, _f)))))
-val _pred: D = Fun(_n => Fun(_f => Fun(_x => app(app(app(_n, Fun(_g => Fun(_h => app(_h, app(_g, _f))))), Fun(_u => _x)), Fun(_u => _u)))))
-val _true: D = Fun(_t => Fun(_f => _t))
-val _false: D = Fun(_t => Fun(_f => _f))
-val _isZero: D = Fun(_n => app(app(_n, Fun(_x => _false)), _true))
-val _fstep: D = Fun(_rec => Fun(_n => app(app(app(app(_isZero, _n), Fun(_u => _one)), Fun(_u => app(app(_mult, _n), app(_rec, app(_pred, _n))))), _n)))
-val _fact: D = app(_Z, _fstep)
+val Z: D = Fun(f => app(Fun(x => app(f, Fun(v => app(app(x, x), v)))), Fun(x => app(f, Fun(v => app(app(x, x), v))))))
+val one: D = Fun(f => Fun(x => app(f, x)))
+val mult: D = Fun(m => Fun(n => Fun(f => app(m, app(n, f)))))
+val pred: D = Fun(n => Fun(f => Fun(x => app(app(app(n, Fun(g => Fun(h => app(h, app(g, f))))), Fun(u => x)), Fun(u => u)))))
+val _true: D = Fun(t => Fun(f => t))
+val _false: D = Fun(t => Fun(f => f))
+val isZero: D = Fun(n => app(app(n, Fun(x => _false)), _true))
+val fstep: D = Fun(rec => Fun(n => app(app(app(app(isZero, n), Fun(u => one)), Fun(u => app(app(mult, n), app(rec, app(pred, n))))), n)))
+val fact: D = app(Z, fstep)
 
 @main def run(): Unit = {
-  check("assert 1", "1", decodeInt(app(_fact, encodeInt(0))))
-  check("assert 2", "1", decodeInt(app(_fact, encodeInt(1))))
-  check("assert 3", "2", decodeInt(app(_fact, encodeInt(2))))
-  check("assert 4", "6", decodeInt(app(_fact, encodeInt(3))))
-  check("assert 5", "120", decodeInt(app(_fact, encodeInt(5))))
+  check("assert 1", "1", decodeInt(app(fact, encodeInt(0))))
+  check("assert 2", "1", decodeInt(app(fact, encodeInt(1))))
+  check("assert 3", "2", decodeInt(app(fact, encodeInt(2))))
+  check("assert 4", "6", decodeInt(app(fact, encodeInt(3))))
+  check("assert 5", "120", decodeInt(app(fact, encodeInt(5))))
   if (_failures > 0) { println(_failures.toString + " failure(s)"); System.exit(1) }
   println("all green")
 }

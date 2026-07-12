@@ -4,17 +4,17 @@ import java.util.function.Function;
 class Main {
     static int _failures = 0;
 
-    static final D _I = new Fun(_x -> _x);
-    static final D _K = new Fun(_x -> new Fun(_y -> _x));
-    static final D _S = new Fun(_x -> new Fun(_y -> new Fun(_z -> _x.apply(_z).apply(_y.apply(_z)))));
-    static final D _zero = new Fun(_f -> new Fun(_x -> _x));
-    static final D _succ = new Fun(_n -> new Fun(_f -> new Fun(_x -> _f.apply(_n.apply(_f).apply(_x)))));
-    static final D _add = new Fun(_m -> new Fun(_n -> new Fun(_f -> new Fun(_x -> _m.apply(_f).apply(_n.apply(_f).apply(_x))))));
-    static final D _true = new Fun(_t -> new Fun(_f -> _t));
-    static final D _false = new Fun(_t -> new Fun(_f -> _f));
-    static final D _if = new Fun(_b -> new Fun(_t -> new Fun(_e -> _b.apply(_t).apply(_e))));
-    static final D _and = new Fun(_p -> new Fun(_q -> _p.apply(_q).apply(_p)));
-    static final D _not = new Fun(_b -> _b.apply(_false).apply(_true));
+    static final D I = new Fun(x -> x);
+    static final D K = new Fun(x -> new Fun(y -> x));
+    static final D S = new Fun(x -> new Fun(y -> new Fun(z -> x.apply(z).apply(y.apply(z)))));
+    static final D zero = new Fun(f -> new Fun(x -> x));
+    static final D succ = new Fun(n -> new Fun(f -> new Fun(x -> f.apply(n.apply(f).apply(x)))));
+    static final D add = new Fun(m -> new Fun(n -> new Fun(f -> new Fun(x -> m.apply(f).apply(n.apply(f).apply(x))))));
+    static final D _true = new Fun(t -> new Fun(f -> t));
+    static final D _false = new Fun(t -> new Fun(f -> f));
+    static final D _if = new Fun(b -> new Fun(t -> new Fun(e -> b.apply(t).apply(e))));
+    static final D and = new Fun(p -> new Fun(q -> p.apply(q).apply(p)));
+    static final D not = new Fun(b -> b.apply(_false).apply(_true));
 
     static D encodeInt(int n) {              // host int -> チャーチ数（Fun）
         return new Fun(f -> new Fun(x -> {
@@ -126,14 +126,14 @@ class Main {
     }
 
     public static void main(String[] args) {
-        check("assert 1", "1", decodeInt(_S.apply(_K).apply(_K).apply(encodeInt(1))));
-        check("assert 2", "0", decodeInt(_zero));
-        check("assert 3", "3", decodeInt(_succ.apply(encodeInt(2))));
-        check("assert 4", "2", decodeInt(_add.apply(encodeInt(1)).apply(encodeInt(1))));
-        check("assert 5", "true", decodeBool(_and.apply(_true).apply(_true)));
-        check("assert 6", "false", decodeBool(_and.apply(_true).apply(_false)));
+        check("assert 1", "1", decodeInt(S.apply(K).apply(K).apply(encodeInt(1))));
+        check("assert 2", "0", decodeInt(zero));
+        check("assert 3", "3", decodeInt(succ.apply(encodeInt(2))));
+        check("assert 4", "2", decodeInt(add.apply(encodeInt(1)).apply(encodeInt(1))));
+        check("assert 5", "true", decodeBool(and.apply(_true).apply(_true)));
+        check("assert 6", "false", decodeBool(and.apply(_true).apply(_false)));
         check("assert 7", "false", decodeBool(_if.apply(_false).apply(_true).apply(_false)));
-        check("assert 8", "true", decodeBool(_not.apply(_false)));
+        check("assert 8", "true", decodeBool(not.apply(_false)));
         if (_failures > 0) {
             System.out.println(_failures + " failure(s)");
             System.exit(1);

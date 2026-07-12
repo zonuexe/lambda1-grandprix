@@ -143,17 +143,17 @@ std::string decodeJson(D v) {
     return "?";
 }
 
-D _pair = D(Fn([](D _a) { return D(Fn([_a](D _b) { return D(Fn([_a, _b](D _s) { return _s.apply(_a).apply(_b); })); })); }));
-D _nil = D(Fn([](D _n) { return D(Fn([_n](D _c) { return _n; })); }));
-D _cons = D(Fn([](D _h) { return D(Fn([_h](D _t) { return D(Fn([_h, _t](D _n) { return D(Fn([_h, _t](D _c) { return _c.apply(_h).apply(_t); })); })); })); }));
-D _true = D(Fn([](D _t) { return D(Fn([_t](D _f) { return _t; })); }));
-D _false = D(Fn([](D _t) { return D(Fn([](D _f) { return _f; })); }));
-D _snd = D(Fn([](D _p) { return _p.apply(_false); }));
-D _one = D(Fn([](D _f) { return D(Fn([_f](D _x) { return _f.apply(_x); })); }));
-D _pred = D(Fn([](D _n) { return D(Fn([_n](D _f) { return D(Fn([_f, _n](D _x) { return _n.apply(D(Fn([_f](D _g) { return D(Fn([_f, _g](D _h) { return _h.apply(_g.apply(_f)); })); }))).apply(D(Fn([_x](D _u) { return _x; }))).apply(D(Fn([](D _u) { return _u; }))); })); })); }));
-D _tint = D(Fn([](D _k) { return _pair.apply(_one).apply(_k); }));
-D _step = D(Fn([](D _p) { return _p.apply(D(Fn([](D _k) { return D(Fn([_k](D _l) { return _pair.apply(_pred.apply(_k)).apply(_cons.apply(_tint.apply(_k)).apply(_l)); })); }))); }));
-D _range = D(Fn([](D _n) { return _snd.apply(_n.apply(_step).apply(_pair.apply(_n).apply(_nil))); }));
+D pair = D(Fn([](D a) { return D(Fn([a](D b) { return D(Fn([a, b](D s) { return s.apply(a).apply(b); })); })); }));
+D nil = D(Fn([](D n) { return D(Fn([n](D c) { return n; })); }));
+D cons = D(Fn([](D h) { return D(Fn([h](D t) { return D(Fn([h, t](D n) { return D(Fn([h, t](D c) { return c.apply(h).apply(t); })); })); })); }));
+D _true = D(Fn([](D t) { return D(Fn([t](D f) { return t; })); }));
+D _false = D(Fn([](D t) { return D(Fn([](D f) { return f; })); }));
+D snd = D(Fn([](D p) { return p.apply(_false); }));
+D one = D(Fn([](D f) { return D(Fn([f](D x) { return f.apply(x); })); }));
+D pred = D(Fn([](D n) { return D(Fn([n](D f) { return D(Fn([f, n](D x) { return n.apply(D(Fn([f](D g) { return D(Fn([f, g](D h) { return h.apply(g.apply(f)); })); }))).apply(D(Fn([x](D u) { return x; }))).apply(D(Fn([](D u) { return u; }))); })); })); }));
+D tint = D(Fn([](D k) { return pair.apply(one).apply(k); }));
+D step = D(Fn([](D p) { return p.apply(D(Fn([](D k) { return D(Fn([k](D l) { return pair.apply(pred.apply(k)).apply(cons.apply(tint.apply(k)).apply(l)); })); }))); }));
+D range = D(Fn([](D n) { return snd.apply(n.apply(step).apply(pair.apply(n).apply(nil))); }));
 
 int main() {
     check("assert 1", "1", decodeJson(jInt(1)));
@@ -161,12 +161,12 @@ int main() {
     check("assert 3", "false", decodeJson(jBool(_false)));
     check("assert 4", "\"hi\"", decodeJson(jStr("hi")));
     check("assert 5", "null", decodeJson(jNull()));
-    check("assert 6", "[1,true]", decodeJson(jArr(_cons.apply(jInt(1)).apply(_cons.apply(jBool(_true)).apply(_nil)))));
-    check("assert 7", "{\"k\":1}", decodeJson(jObj(_cons.apply(_pair.apply(jStr("k")).apply(jInt(1))).apply(_nil))));
-    check("assert 8", "[1,[2,3]]", decodeJson(jArr(_cons.apply(jInt(1)).apply(_cons.apply(jArr(_cons.apply(jInt(2)).apply(_cons.apply(jInt(3)).apply(_nil)))).apply(_nil)))));
-    check("assert 9", "[]", decodeJson(jArr(_range.apply(encodeInt(0)))));
-    check("assert 10", "[1]", decodeJson(jArr(_range.apply(encodeInt(1)))));
-    check("assert 11", "[1,2,3]", decodeJson(jArr(_range.apply(encodeInt(3)))));
+    check("assert 6", "[1,true]", decodeJson(jArr(cons.apply(jInt(1)).apply(cons.apply(jBool(_true)).apply(nil)))));
+    check("assert 7", "{\"k\":1}", decodeJson(jObj(cons.apply(pair.apply(jStr("k")).apply(jInt(1))).apply(nil))));
+    check("assert 8", "[1,[2,3]]", decodeJson(jArr(cons.apply(jInt(1)).apply(cons.apply(jArr(cons.apply(jInt(2)).apply(cons.apply(jInt(3)).apply(nil)))).apply(nil)))));
+    check("assert 9", "[]", decodeJson(jArr(range.apply(encodeInt(0)))));
+    check("assert 10", "[1]", decodeJson(jArr(range.apply(encodeInt(1)))));
+    check("assert 11", "[1,2,3]", decodeJson(jArr(range.apply(encodeInt(3)))));
     if (_failures > 0) { std::cout << _failures << " failure(s)\n"; return 1; }
     std::cout << "all green\n";
     return 0;

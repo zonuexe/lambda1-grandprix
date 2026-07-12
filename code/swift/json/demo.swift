@@ -128,28 +128,28 @@ func decodeJson(_ v: D) -> String {
     }
 }
 
-let _pair: D = .fun { _a in .fun { _b in .fun { _s in app(app(_s, _a), _b) } } }
-let _nil: D = .fun { _n in .fun { _c in _n } }
-let _cons: D = .fun { _h in .fun { _t in .fun { _n in .fun { _c in app(app(_c, _h), _t) } } } }
-let _true: D = .fun { _t in .fun { _f in _t } }
-let _false: D = .fun { _t in .fun { _f in _f } }
-let _snd: D = .fun { _p in app(_p, _false) }
-let _one: D = .fun { _f in .fun { _x in app(_f, _x) } }
-let _pred: D = .fun { _n in .fun { _f in .fun { _x in app(app(app(_n, .fun { _g in .fun { _h in app(_h, app(_g, _f)) } }), .fun { _u in _x }), .fun { _u in _u }) } } }
-let _tint: D = .fun { _k in app(app(_pair, _one), _k) }
-let _step: D = .fun { _p in app(_p, .fun { _k in .fun { _l in app(app(_pair, app(_pred, _k)), app(app(_cons, app(_tint, _k)), _l)) } }) }
-let _range: D = .fun { _n in app(_snd, app(app(_n, _step), app(app(_pair, _n), _nil))) }
+let pair: D = .fun { a in .fun { b in .fun { s in app(app(s, a), b) } } }
+let _nil: D = .fun { n in .fun { c in n } }
+let cons: D = .fun { h in .fun { t in .fun { n in .fun { c in app(app(c, h), t) } } } }
+let _true: D = .fun { t in .fun { f in t } }
+let _false: D = .fun { t in .fun { f in f } }
+let snd: D = .fun { p in app(p, _false) }
+let one: D = .fun { f in .fun { x in app(f, x) } }
+let pred: D = .fun { n in .fun { f in .fun { x in app(app(app(n, .fun { g in .fun { h in app(h, app(g, f)) } }), .fun { u in x }), .fun { u in u }) } } }
+let tint: D = .fun { k in app(app(pair, one), k) }
+let step: D = .fun { p in app(p, .fun { k in .fun { l in app(app(pair, app(pred, k)), app(app(cons, app(tint, k)), l)) } }) }
+let range: D = .fun { n in app(snd, app(app(n, step), app(app(pair, n), _nil))) }
 
 check("assert 1", "1", decodeJson(jInt(1)))
 check("assert 2", "true", decodeJson(jBool(_true)))
 check("assert 3", "false", decodeJson(jBool(_false)))
 check("assert 4", "\"hi\"", decodeJson(jStr("hi")))
 check("assert 5", "null", decodeJson(jNull()))
-check("assert 6", "[1,true]", decodeJson(jArr(app(app(_cons, jInt(1)), app(app(_cons, jBool(_true)), _nil)))))
-check("assert 7", "{\"k\":1}", decodeJson(jObj(app(app(_cons, app(app(_pair, jStr("k")), jInt(1))), _nil))))
-check("assert 8", "[1,[2,3]]", decodeJson(jArr(app(app(_cons, jInt(1)), app(app(_cons, jArr(app(app(_cons, jInt(2)), app(app(_cons, jInt(3)), _nil)))), _nil)))))
-check("assert 9", "[]", decodeJson(jArr(app(_range, encodeInt(0)))))
-check("assert 10", "[1]", decodeJson(jArr(app(_range, encodeInt(1)))))
-check("assert 11", "[1,2,3]", decodeJson(jArr(app(_range, encodeInt(3)))))
+check("assert 6", "[1,true]", decodeJson(jArr(app(app(cons, jInt(1)), app(app(cons, jBool(_true)), _nil)))))
+check("assert 7", "{\"k\":1}", decodeJson(jObj(app(app(cons, app(app(pair, jStr("k")), jInt(1))), _nil))))
+check("assert 8", "[1,[2,3]]", decodeJson(jArr(app(app(cons, jInt(1)), app(app(cons, jArr(app(app(cons, jInt(2)), app(app(cons, jInt(3)), _nil)))), _nil)))))
+check("assert 9", "[]", decodeJson(jArr(app(range, encodeInt(0)))))
+check("assert 10", "[1]", decodeJson(jArr(app(range, encodeInt(1)))))
+check("assert 11", "[1,2,3]", decodeJson(jArr(app(range, encodeInt(3)))))
 if _failures > 0 { print("\(_failures) failure(s)"); exit(1) }
 print("all green")

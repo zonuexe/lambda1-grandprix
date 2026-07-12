@@ -19,6 +19,7 @@
 | newlisp | [demo.lsp](newlisp/bench/) | [demo.lsp](newlisp/empty/) | [demo.lsp](newlisp/json/) | [demo.lsp](newlisp/recursion/) | [demo.lsp](newlisp/v1/) |
 | pascal | [demo.pas](pascal/bench/) | [demo.pas](pascal/empty/) | [demo.pas](pascal/json/) | [demo.pas](pascal/recursion/) | [demo.pas](pascal/v1/) |
 | perl | [demo.pl](perl/bench/) | [demo.pl](perl/empty/) | [demo.pl](perl/json/) | [demo.pl](perl/recursion/) | [demo.pl](perl/v1/) |
+| php-ski | [demo.php](php-ski/bench/) | [demo.php](php-ski/empty/) | [demo.php](php-ski/json/) | [demo.php](php-ski/recursion/) | [demo.php](php-ski/v1/) |
 | php | [demo.php](php/bench/) | [demo.php](php/empty/) | [demo.php](php/json/) | [demo.php](php/recursion/) | [demo.php](php/v1/) |
 | python | [demo.py](python/bench/) | [demo.py](python/empty/) | [demo.py](python/json/) | [demo.py](python/recursion/) | [demo.py](python/v1/) |
 | racket | [demo.rkt](racket/bench/) | [demo.rkt](racket/empty/) | [demo.rkt](racket/json/) | [demo.rkt](racket/recursion/) | [demo.rkt](racket/v1/) |

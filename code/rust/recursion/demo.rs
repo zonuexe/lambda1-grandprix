@@ -68,20 +68,20 @@ fn check(label: &str, a: String, b: String) -> i32 {
 
 fn main() {
     let mut _failures = 0;
-    let _Z: D = { lam(move |_f| { let _f = _f.clone(); lam(move |_x| _f.clone().app({ let _x = _x.clone(); lam(move |_v| _x.clone().app(_x.clone()).app(_v.clone())) })) }.app({ let _f = _f.clone(); lam(move |_x| _f.clone().app({ let _x = _x.clone(); lam(move |_v| _x.clone().app(_x.clone()).app(_v.clone())) })) })) };
-    let _one: D = { lam(move |_f| { let _f = _f.clone(); lam(move |_x| _f.clone().app(_x.clone())) }) };
-    let _mult: D = { lam(move |_m| { let _m = _m.clone(); lam(move |_n| { let _m = _m.clone(); let _n = _n.clone(); lam(move |_f| _m.clone().app(_n.clone().app(_f.clone()))) }) }) };
-    let _pred: D = { lam(move |_n| { let _n = _n.clone(); lam(move |_f| { let _f = _f.clone(); let _n = _n.clone(); lam(move |_x| _n.clone().app({ let _f = _f.clone(); lam(move |_g| { let _f = _f.clone(); let _g = _g.clone(); lam(move |_h| _h.clone().app(_g.clone().app(_f.clone()))) }) }).app({ let _x = _x.clone(); lam(move |_u| _x.clone()) }).app({ lam(move |_u| _u.clone()) })) }) }) };
-    let _true: D = { lam(move |_t| { let _t = _t.clone(); lam(move |_f| _t.clone()) }) };
-    let _false: D = { lam(move |_t| { lam(move |_f| _f.clone()) }) };
-    let _isZero: D = { let _false = _false.clone(); let _true = _true.clone(); lam(move |_n| _n.clone().app({ let _false = _false.clone(); lam(move |_x| _false.clone()) }).app(_true.clone())) };
-    let _fstep: D = { let _isZero = _isZero.clone(); let _mult = _mult.clone(); let _one = _one.clone(); let _pred = _pred.clone(); lam(move |_rec| { let _isZero = _isZero.clone(); let _mult = _mult.clone(); let _one = _one.clone(); let _pred = _pred.clone(); let _rec = _rec.clone(); lam(move |_n| _isZero.clone().app(_n.clone()).app({ let _one = _one.clone(); lam(move |_u| _one.clone()) }).app({ let _mult = _mult.clone(); let _n = _n.clone(); let _pred = _pred.clone(); let _rec = _rec.clone(); lam(move |_u| _mult.clone().app(_n.clone()).app(_rec.clone().app(_pred.clone().app(_n.clone())))) }).app(_n.clone())) }) };
-    let _fact: D = _Z.clone().app(_fstep.clone());
-    _failures += check("assert 1", "1".to_string(), decodeInt(_fact.clone().app(encodeInt(0))));
-    _failures += check("assert 2", "1".to_string(), decodeInt(_fact.clone().app(encodeInt(1))));
-    _failures += check("assert 3", "2".to_string(), decodeInt(_fact.clone().app(encodeInt(2))));
-    _failures += check("assert 4", "6".to_string(), decodeInt(_fact.clone().app(encodeInt(3))));
-    _failures += check("assert 5", "120".to_string(), decodeInt(_fact.clone().app(encodeInt(5))));
+    let Z: D = { lam(move |f| { let f = f.clone(); lam(move |x| f.clone().app({ let x = x.clone(); lam(move |v| x.clone().app(x.clone()).app(v.clone())) })) }.app({ let f = f.clone(); lam(move |x| f.clone().app({ let x = x.clone(); lam(move |v| x.clone().app(x.clone()).app(v.clone())) })) })) };
+    let one: D = { lam(move |f| { let f = f.clone(); lam(move |x| f.clone().app(x.clone())) }) };
+    let mult: D = { lam(move |m| { let m = m.clone(); lam(move |n| { let m = m.clone(); let n = n.clone(); lam(move |f| m.clone().app(n.clone().app(f.clone()))) }) }) };
+    let pred: D = { lam(move |n| { let n = n.clone(); lam(move |f| { let f = f.clone(); let n = n.clone(); lam(move |x| n.clone().app({ let f = f.clone(); lam(move |g| { let f = f.clone(); let g = g.clone(); lam(move |h| h.clone().app(g.clone().app(f.clone()))) }) }).app({ let x = x.clone(); lam(move |u| x.clone()) }).app({ lam(move |u| u.clone()) })) }) }) };
+    let _true: D = { lam(move |t| { let t = t.clone(); lam(move |f| t.clone()) }) };
+    let _false: D = { lam(move |t| { lam(move |f| f.clone()) }) };
+    let isZero: D = { let _false = _false.clone(); let _true = _true.clone(); lam(move |n| n.clone().app({ let _false = _false.clone(); lam(move |x| _false.clone()) }).app(_true.clone())) };
+    let fstep: D = { let isZero = isZero.clone(); let mult = mult.clone(); let one = one.clone(); let pred = pred.clone(); lam(move |rec| { let isZero = isZero.clone(); let mult = mult.clone(); let one = one.clone(); let pred = pred.clone(); let rec = rec.clone(); lam(move |n| isZero.clone().app(n.clone()).app({ let one = one.clone(); lam(move |u| one.clone()) }).app({ let mult = mult.clone(); let n = n.clone(); let pred = pred.clone(); let rec = rec.clone(); lam(move |u| mult.clone().app(n.clone()).app(rec.clone().app(pred.clone().app(n.clone())))) }).app(n.clone())) }) };
+    let fact: D = Z.clone().app(fstep.clone());
+    _failures += check("assert 1", "1".to_string(), decodeInt(fact.clone().app(encodeInt(0))));
+    _failures += check("assert 2", "1".to_string(), decodeInt(fact.clone().app(encodeInt(1))));
+    _failures += check("assert 3", "2".to_string(), decodeInt(fact.clone().app(encodeInt(2))));
+    _failures += check("assert 4", "6".to_string(), decodeInt(fact.clone().app(encodeInt(3))));
+    _failures += check("assert 5", "120".to_string(), decodeInt(fact.clone().app(encodeInt(5))));
     if _failures > 0 {
         println!("{} failure(s)", _failures);
         std::process::exit(1);
