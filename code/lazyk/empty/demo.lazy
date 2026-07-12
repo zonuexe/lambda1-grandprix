@@ -1,0 +1,6 @@
+# λ-1 Lazy K 実行検証プログラム（zonu-lazyk crate で実行）
+# 各 assert は入力を無視して出力バイト列を生成する自己完結プログラム:
+#   int  行 … 出力バイト数 = 期待整数 / bool 行 … 出力バイト列 = 期待文字列
+#   skip 行 … Lazy K に対応物が無い（decodeJson 等）
+# λ は bracket abstraction で除去、名前付き定義はインライン展開済み。
+

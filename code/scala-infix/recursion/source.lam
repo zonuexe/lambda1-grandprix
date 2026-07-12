@@ -1,0 +1,26 @@
+# λ-1 再帰デモ: applicative-order 不動点 Z で階乗を定義する。
+#
+# 古典 Y = λf.(λx.f (x x)) (λx.f (x x)) は正規順序（遅延）専用で、CBV の処理系では
+# `x x` を先に評価して発散する。Z は η展開 `λv.x x v` で自己適用を遅延させ、CBV でも
+# 有限に不動点をとれる（Haskell/Lazy K の遅延でも動く）。純ラムダなので raw 層のみ使用。
+#
+# CBV では church の if `b t e` が両枝を先行評価するため、枝を `λu. …` でサンク化し、
+# 選ばれた側だけを適用（`… n`）で強制する。
+
+Z      = λf.(λx.f (λv.x x v)) (λx.f (λv.x x v))
+one    = λf.λx.f x
+mult   = λm.λn.λf.m (n f)
+pred   = λn.λf.λx.n (λg.λh.h (g f)) (λu.x) (λu.u)
+true   = λt.λf.t
+false  = λt.λf.f
+isZero = λn.n (λx.false) true
+fstep  = λrec.λn. isZero n (λu. one) (λu. mult n (rec (pred n))) n
+fact   = Z fstep
+
+---
+
+assert '1'   == decodeInt[ fact (encodeInt[0]) ]
+assert '1'   == decodeInt[ fact (encodeInt[1]) ]
+assert '2'   == decodeInt[ fact (encodeInt[2]) ]
+assert '6'   == decodeInt[ fact (encodeInt[3]) ]
+assert '120' == decodeInt[ fact (encodeInt[5]) ]
