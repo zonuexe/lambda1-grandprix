@@ -21,6 +21,7 @@ pub mod newlisp;
 pub mod pascal;
 pub mod perl;
 pub mod php;
+pub mod php_ski;
 pub mod python;
 pub mod racket;
 pub mod ruby;
@@ -146,6 +147,7 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(rust::Rust),
         Box::new(ruby::Ruby),
         Box::new(php::Php),
+        Box::new(php_ski::PhpSki),
         Box::new(clojure::Clojure),
         Box::new(clojure_lam::ClojureLam),
         Box::new(emacs::Emacs),
