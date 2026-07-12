@@ -307,6 +307,6 @@ dependencies = [
 
 [[package]]
 name = "zonu-lazyk"
-version = "0.1.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "606b9b2002079c1baaf4dc24d3698e193af4f4e67eb290b9c6f1c67f55661abc"
+checksum = "45c691e9dd7f30deea0ca1d38ac886f1dcee644a086afe1aab9061cd4241f730"

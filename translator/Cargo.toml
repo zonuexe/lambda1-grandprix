@@ -20,7 +20,7 @@ path = "src/bin/lazyk_runner.rs"
 
 [dependencies]
 niilisp = "0.4"
-zonu-lazyk = "0.1"
+zonu-lazyk = "0.3"
 
 [profile.release]
 opt-level = 2

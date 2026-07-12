@@ -4,10 +4,10 @@
 //!   1. λ を bracket abstraction で S/K/I へ除去する。
 //!   2. 各定義は abstraction 後に閉じたコンビネータ項になるので、参照箇所へインライン展開する。
 //!
-//! 検証は各 assert を「入力を無視して出力バイト列を生成する自己完結プログラム」へ変換し、
-//! zonu-lazyk で実行して観測する:
-//!   decodeInt  … church 数 N を「N バイト出力」に落とし、出力長 == 期待整数 で判定。
-//!   decodeBool … church 真偽値で "true"/"false" のバイト列を選ばせ、出力 == 期待文字列。
+//! 検証は各 assert の項を zonu-lazyk の `Program::eval_numeral()` で **チャーチ数として直接
+//! 観測**する（0.3.0 / ADR-0008。旧: 出力バイト列を数える迂回。ADR-0003 の望ましい性質1）:
+//!   decodeInt  … 項（church 数）を eval_numeral → 整数、期待値と比較。
+//!   decodeBool … `bool 1 0` を eval_numeral → 1/0 に落とし、"true"/"false" と比較。
 //!   decodeJson … Lazy K に現実的な対応物が無いため非対応（skip）。
 
 use super::Backend;
@@ -87,42 +87,10 @@ fn church(n: i64) -> Comb {
     abstr("f", &inner)
 }
 
-fn vcomb(s: &str) -> Comb {
-    Comb::Var(s.to_string())
-}
-
-/// cons = λh.λt.λf. f h t（Lazy K の出力リスト規約: `list K`=head, `list (K I)`=tail）。
-fn cons_comb() -> Comb {
-    let body = app(app(vcomb("f"), vcomb("h")), vcomb("t"));
-    abstr("h", &abstr("t", &abstr("f", &body)))
-}
-
-/// 出力リストの終端: head が 256 以上（EOF）になるセル。
-fn end_comb() -> Comb {
-    app(app(cons_comb(), church(256)), Comb::I)
-}
-
-/// バイト列 s を Lazy K 出力リスト（cons 連鎖＋終端）へ。
-fn str_list(s: &str) -> Comb {
-    let mut lst = end_comb();
-    for &b in s.as_bytes().iter().rev() {
-        lst = app(app(cons_comb(), church(b as i64)), lst);
-    }
-    lst
-}
-
-/// decodeInt 用: church 数 term を「値ぶんのバイトを出力する」プログラムへ（入力は無視）。
-/// term (cons 'A') end = 'A' を N 個並べたリスト。出力長で N を観測する。
-fn wrap_int(term: Comb) -> Comb {
-    let cons_b = app(cons_comb(), church(65)); // 'A'（値は長さのみ観測するので何でもよい）
-    let list = app(app(term, cons_b), end_comb());
-    app(Comb::K, list) // 入力を無視
-}
-
-/// decodeBool 用: church 真偽値 term に "true"/"false" を選ばせるプログラム。
-fn wrap_bool(term: Comb) -> Comb {
-    let sel = app(app(term, str_list("true")), str_list("false"));
-    app(Comb::K, sel) // 入力を無視
+/// decodeBool 用: church 真偽値 term を `term 1 0` に落とす（true→church1 / false→church0）。
+/// eval_numeral で 1/0 として観測する。
+fn bool_to_numeral(term: Comb) -> Comb {
+    app(app(term, church(1)), church(0))
 }
 
 /// DSL の Term を SKI コンビネータへ。定義参照は map からインライン展開。
@@ -208,9 +176,9 @@ impl Backend for LazyK {
         }
 
         let mut out = String::new();
-        out.push_str("# λ-1 Lazy K 実行検証プログラム（zonu-lazyk crate で実行）\n");
-        out.push_str("# 各 assert は入力を無視して出力バイト列を生成する自己完結プログラム:\n");
-        out.push_str("#   int  行 … 出力バイト数 = 期待整数 / bool 行 … 出力バイト列 = 期待文字列\n");
+        out.push_str("# λ-1 Lazy K 実行検証プログラム（zonu-lazyk crate で eval_numeral 実行）\n");
+        out.push_str("# 各 assert は SKI 項。eval_numeral でチャーチ数として観測する:\n");
+        out.push_str("#   int  行 … 項 = 期待整数 / bool 行 … `term 1 0` = 1(true)/0(false)\n");
         out.push_str("#   skip 行 … Lazy K に対応物が無い（decodeJson 等）\n");
         out.push_str("# λ は bracket abstraction で除去、名前付き定義はインライン展開済み。\n\n");
 
@@ -224,10 +192,10 @@ impl Backend for LazyK {
             let idx = i + 1;
             let built = match &a.rhs {
                 Term::HostCall(name, args) if name == "decodeInt" && !args.is_empty() => {
-                    Some((Kind::Int, render(&wrap_int(to_comb(&args[0], &map)))))
+                    Some((Kind::Int, render(&to_comb(&args[0], &map))))
                 }
                 Term::HostCall(name, args) if name == "decodeBool" && !args.is_empty() => {
-                    Some((Kind::Bool, render(&wrap_bool(to_comb(&args[0], &map)))))
+                    Some((Kind::Bool, render(&bool_to_numeral(to_comb(&args[0], &map)))))
                 }
                 _ => None,
             };
@@ -262,18 +230,20 @@ impl Backend for LazyK {
                 println!("skip assert {} (Lazy K 非対応: decodeJson 等)", e.idx);
                 continue;
             }
-            let mut buf: Vec<u8> = Vec::new();
-            match zonu_lazyk::run(&e.program, std::io::empty(), &mut buf) {
-                Ok(()) => {}
-                Err(err) => {
+            let n = match zonu_lazyk::Program::compile(&e.program)
+                .map_err(|e| e.to_string())
+                .and_then(|p| p.eval_numeral().map_err(|e| e.to_string()))
+            {
+                Ok(n) => n,
+                Err(msg) => {
                     failures += 1;
-                    println!("FAIL assert {}: 実行エラー {:?}", e.idx, err);
+                    println!("FAIL assert {}: 実行エラー {}", e.idx, msg);
                     continue;
                 }
-            }
+            };
             let got = match e.kind {
-                Kind::Int => buf.len().to_string(),
-                Kind::Bool => String::from_utf8_lossy(&buf).into_owned(),
+                Kind::Int => n.to_string(),
+                Kind::Bool => if n != 0 { "true" } else { "false" }.to_string(),
                 Kind::Unsupported => unreachable!(),
             };
             if got == e.expected {
