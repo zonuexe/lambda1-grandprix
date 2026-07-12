@@ -1,10 +1,14 @@
-//! PHP (SKI / point-free) バックエンド — Lazy K 方式を PHP で。
+//! PHP (遅延 SKI / point-free) バックエンド — Lazy K 方式を PHP で。
 //!
 //! DSL の λ を bracket abstraction で S/K/I へ除去し、名前付き定義は参照箇所へインライン
 //! 展開する（定義は閉じた項なので変数捕獲は起きない）。生成される項は **S()/K()/I()
 //! コンビネータの適用のみで、DSL 定義に対応するホスト変数（`$pair` 等）は一切現れない**。
 //! 境界だけはホスト関数: `encodeInt[リテラル]` は church 項へ inline、他の host 呼び出し
 //! （decodeInt / jInt / decodeJson …）はプレリュード関数呼び出しとして残す。
+//!
+//! 評価は **call-by-name（遅延）**: 正格 SKI は bracket abstraction のサンク（`λu.M`→`K M`）
+//! を先行評価して Z 不動点が発散するため、適用の実引数を必ずメモ化サンク `_t(fn()=> …)` で
+//! 包む（詳細は preludes/php_ski.php）。これで recursion（Z 階乗）も回る。
 
 use super::Backend;
 use crate::ast::{Program, Term};
@@ -84,13 +88,14 @@ fn to_comb(t: &Term, map: &BTreeMap<String, Comb>) -> Comb {
     }
 }
 
-/// SKI 項を PHP 式へ。適用は PHP のクロージャ呼び出し `f(x)`（左結合で連鎖）。
+/// SKI 項を PHP 式へ。**call-by-name**: 適用の実引数はメモ化サンク `_t(fn()=> …)` で包む
+/// （正格 PHP でも K が第2引数を評価せず、Z 不動点などのサンクが保たれる）。
 fn render(c: &Comb) -> String {
     match c {
         Comb::S => "S()".to_string(),
         Comb::K => "K()".to_string(),
         Comb::I => "I()".to_string(),
-        Comb::App(f, x) => format!("{}({})", render(f), render(x)),
+        Comb::App(f, x) => format!("{}(_t(fn() => {}))", render(f), render(x)),
         Comb::Host(name, args) => {
             let a: Vec<String> = args.iter().map(render).collect();
             format!("{}({})", name, a.join(", "))
