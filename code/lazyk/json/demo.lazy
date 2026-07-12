@@ -1,14 +1,17 @@
-# λ-1 Lazy K 実行検証プログラム（zonu-lazyk crate で実行）
-# 各 assert は入力を無視して出力バイト列を生成する自己完結プログラム:
-#   int  行 … 出力バイト数 = 期待整数 / bool 行 … 出力バイト列 = 期待文字列
+# λ-1 Lazy K 実行検証プログラム（zonu-lazyk crate で eval_numeral 実行）
+# 各 assert は SKI 項。eval_numeral でチャーチ数として観測する:
+#   int  行 … 項 = 期待整数 / bool 行 … `term 1 0` = 1(true)/0(false)
 #   skip 行 … Lazy K に対応物が無い（decodeJson 等）
 # λ は bracket abstraction で除去、名前付き定義はインライン展開済み。
 
-#@ 1 skip 1
+#@ 1 int 1
+S (S (K S) (S (K K) I)) (K I)
 
-#@ 2 skip true
+#@ 2 bool true
+S (K K) I (S (S (K S) (S (K K) I)) (K I)) (K I)
 
-#@ 3 skip false
+#@ 3 bool false
+K I (S (S (K S) (S (K K) I)) (K I)) (K I)
 
 #@ 4 skip "hi"
 
