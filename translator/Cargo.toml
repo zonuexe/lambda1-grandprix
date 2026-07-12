@@ -2,10 +2,25 @@
 name = "lambda1-translator"
 version = "0.1.0"
 edition = "2021"
+default-run = "translator"
 
 [[bin]]
 name = "translator"
 path = "src/main.rs"
+
+# niiLISP / Lazy K は本 repo が公開する crate を薄くラップした
+# ランナー bin として組み込む（外部プロセス実行モデルのまま bench も維持）。
+[[bin]]
+name = "niilisp-runner"
+path = "src/bin/niilisp_runner.rs"
+
+[[bin]]
+name = "lazyk-runner"
+path = "src/bin/lazyk_runner.rs"
+
+[dependencies]
+niilisp = "0.4"
+zonu-lazyk = "0.1"
 
 [profile.release]
 opt-level = 2

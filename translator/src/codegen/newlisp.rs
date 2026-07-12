@@ -7,7 +7,14 @@
 //! ただし `expand` は「今ダイナミックに束縛されている大文字シンボル」を焼き込むため、
 //! 別の λ が同名の束縛変数を使っていると誤った値が焼き込まれる。これを避けるため
 //! **束縛変数を全てグローバル一意名（V0, V1, …）にα変換**する（render を override）。
-//! niiLISP は cons を持たないが church エンコードは cons 不使用（検証は互換 newLISP）。
+//! niiLISP は cons を持たないが church エンコードは cons 不使用。実行・検証は niiLISP
+//! 実処理系（niilisp crate をラップした同梱 niilisp-runner）で行う（外部インタプリタは
+//! LAM1_NEWLISP で差し替え可）。
+//!
+//! 既知の制約: `expand` は焼き込み時に大域 λ の本体（V 名を含む）を丸ごとインライン複製
+//! するため、チャーチ前者関数 `pred` を深く入れ子で簡約する項（例 corpus/json.lam の
+//! `range`）では複製された V 名が複数の動的フレームで衝突し評価に失敗する。RANGE 非依存の
+//! 項（v1.lam 等）は全て緑。
 
 use super::Backend;
 use crate::ast::{Program, Term};
@@ -148,6 +155,15 @@ impl Backend for NewLisp {
     }
 
     fn run_argv(&self, _dir: &Path, file: &Path) -> Vec<String> {
-        vec!["newlisp".into(), file.to_string_lossy().into_owned()]
+        // 既定は niiLISP 実処理系（niilisp crate をラップした同梱 niilisp-runner）。
+        // 外部インタプリタ（newLISP 等）と比較したい場合は LAM1_NEWLISP で差し替える。
+        let runner = std::env::var("LAM1_NEWLISP").unwrap_or_else(|_| {
+            std::env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(|d| d.join("niilisp-runner")))
+                .map(|p| p.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "niilisp-runner".to_string())
+        });
+        vec![runner, file.to_string_lossy().into_owned()]
     }
 }

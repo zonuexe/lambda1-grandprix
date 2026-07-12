@@ -147,7 +147,7 @@ pub fn all_backends() -> Vec<Box<dyn Backend>> {
         Box::new(swift::Swift),
         Box::new(pascal::Pascal),
         Box::new(newlisp::NewLisp::new()),
-        Box::new(lazyk::LazyK),
+        Box::new(lazyk::LazyK::new()),
     ]
 }
 
