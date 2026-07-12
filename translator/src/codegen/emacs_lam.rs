@@ -1,8 +1,9 @@
 //! Emacs Lisp バックエンド（λ マクロ変種）。
 //!
-//! プレリュードで `λ` マクロ（`(λ x body)` => `(lambda (x) body)`）を自作し、
-//! λ抽象を `(λ x body)` と短く出力する。それ以外は素の Emacs バックエンドと同じ
-//! （Lisp-2 なので適用は `(funcall f x)`）。
+//! プレリュードで `λ` マクロ（`(λ x body)` => `(lambda (x) body)`）と左結合適用の
+//! `$` マクロ（`($ f a b) => (funcall (funcall f a) b)`）を自作し、λ抽象を
+//! `(λ x body)`、適用の左スパインを `($ f a b …)` と短く出力する（Lisp-2 の
+//! funcall 入れ子を畳んで消す）。
 //! ※ `(λ x . body)` の `.` は Lisp のドット対と衝突するため採用できない（実機で確認済み）。
 
 use super::Backend;
@@ -33,7 +34,13 @@ impl Backend for EmacsLam {
         format!("(λ {} {})", param, body)
     }
     fn emit_app(&self, f: &str, x: &str) -> String {
-        format!("(funcall {} {})", f, x)
+        // 適用は左結合なので、左スパイン `((f a) b) c` を 1 個の `($ f a b c)` に畳む。
+        // f が既に自分の吐いた `($ …)` なら中身へ追記するだけ（funcall の入れ子を消す）。
+        if let Some(inner) = f.strip_prefix("($ ").and_then(|s| s.strip_suffix(')')) {
+            format!("($ {} {})", inner, x)
+        } else {
+            format!("($ {} {})", f, x)
+        }
     }
     fn emit_host_call(&self, name: &str, args: &[String]) -> String {
         if args.is_empty() {

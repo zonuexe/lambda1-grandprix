@@ -7,21 +7,30 @@
 (defmacro λ (arg &rest body)
   `(lambda (,arg) ,@body))
 
+;; 左結合の関数適用マクロ（メタプログラミング）:
+;;   ($ f a b c) => (funcall (funcall (funcall f a) b) c)
+;; Lisp-2 なので適用は funcall が要る。並置 (f a b c) と同じ見た目に畳んで
+;; funcall の入れ子ノイズを消す。
+(defmacro $ (fn &rest args)
+  (if (null args)
+      fn
+    `($ (funcall ,fn ,(car args)) ,@(cdr args))))
+
 (defvar _failures 0)
 
 (defun encodeInt (n)             ; host int -> チャーチ数
   (λ f (λ x
     (let ((acc x) (i 0))
       (while (< i n)
-        (setq acc (funcall f acc))
+        (setq acc ($ f acc))
         (setq i (1+ i)))
       acc))))
 
 (defun decodeInt (v)             ; チャーチ数 -> 文字列（`t` は真値なので使わない）
-  (number-to-string (funcall (funcall v (λ k (1+ k))) 0)))
+  (number-to-string ($ v (λ k (1+ k)) 0)))
 
 (defun decodeBool (v)            ; チャーチ真偽値 -> "true"/"false"
-  (funcall (funcall v "true") "false"))
+  ($ v "true" "false"))
 
 (defun _check (a b label)
   (if (equal a b)
@@ -38,25 +47,25 @@
 
 
 ;;; ============ JSON 層（型付き値。ADR-0005） ============
-;;; 単引数ラムダは自作 λ マクロ。適用は funcall、値渡しの関数は #'name。
+;;; 単引数ラムダは自作 λ マクロ。適用は $ マクロ、値渡しの関数は #'name。
 (defun jK (a) (λ b a))
 (defun jKI (a) (λ b b))
-(defun mkpair (a b) (λ s (funcall (funcall s a) b)))
-(defun fstp (p) (funcall p #'jK))
-(defun sndp (p) (funcall p #'jKI))
-(defun churchToInt (c) (funcall (funcall c (λ k (1+ k))) 0))
+(defun mkpair (a b) (λ s ($ s a b)))
+(defun fstp (p) ($ p #'jK))
+(defun sndp (p) ($ p #'jKI))
+(defun churchToInt (c) ($ c (λ k (1+ k)) 0))
 (defun jcTrue (tt) (λ f tt))
 (defun jcFalse (tt) (λ f f))
-(defun boolToHost (c) (funcall (funcall c t) nil))
+(defun boolToHost (c) ($ c t nil))
 (defvar nilH (λ n (λ c n)))
-(defun consH (h tl) (λ n (λ c (funcall (funcall c h) tl))))
+(defun consH (h tl) (λ n (λ c ($ c h tl))))
 (defun isNil (lst)
-  (boolToHost (funcall (funcall lst #'jcTrue)
-                       (λ h (λ tl #'jcFalse)))))
+  (boolToHost ($ lst #'jcTrue
+                 (λ h (λ tl #'jcFalse)))))
 (defun headL (lst)
-  (funcall (funcall lst nil) (λ h (λ tl h))))
+  ($ lst nil (λ h (λ tl h))))
 (defun tailL (lst)
-  (funcall (funcall lst nil) (λ h (λ tl tl))))
+  ($ lst nil (λ h (λ tl tl))))
 (defun walk (lst)
   (let ((acc '()))
     (while (not (isNil lst))
