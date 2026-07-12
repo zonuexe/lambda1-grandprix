@@ -11,10 +11,17 @@
 //! 実処理系（niilisp crate をラップした同梱 niilisp-runner）で行う（外部インタプリタは
 //! LAM1_NEWLISP で差し替え可）。
 //!
-//! 既知の制約: `expand` は焼き込み時に大域 λ の本体（V 名を含む）を丸ごとインライン複製
-//! するため、チャーチ前者関数 `pred` を深く入れ子で簡約する項（例 corpus/json.lam の
-//! `range`）では複製された V 名が複数の動的フレームで衝突し評価に失敗する。RANGE 非依存の
-//! 項（v1.lam 等）は全て緑。
+//! `expand` は「先頭大文字 かつ 束縛済み」のシンボルを焼き込む。大域定義は安定でローカルを
+//! 捕捉しない＝焼き込む必要が無いので `g_` 接頭辞（先頭小文字）で焼き込み対象から外し、
+//! 名前参照で解決する（[[issues/14]] approach A）。これで大域本体のインライン複製は無くなり、
+//! `pred` 単体や1段の反復は緑になる。
+//!
+//! 残る制約: チャーチ数を2段以上反復し、その各段で `pred` の結果をアキュムレータへ蓄積する
+//! 項（例 corpus/json.lam の `range` で n≥1）は依然失敗する。原因は**捕捉ローカル（V 名）の
+//! 再焼き込み**——同じ静的 V 名が複数の動的フレームで同時に生き、`expand` が束縛位置へ値を
+//! 焼き込む（`parameter is not a symbol: 0` 等）。これは大域ではなくローカルの問題で、
+//! 各インスタンス化ごとの実行時α変換（issues/14 approach B/C）が要る。RANGE 非依存の項
+//! （v1.lam 等）は全て緑。
 
 use super::Backend;
 use crate::ast::{Program, Term};
@@ -83,9 +90,13 @@ impl Backend for NewLisp {
         Some(("lam1.lsp".into(), self.prelude().into()))
     }
 
-    // 大文字化（case-sensitive ゆえ小文字の newLISP 組込みと衝突しない）。
+    // 大域定義名。`expand` は「先頭が大文字 かつ 束縛済み」のシンボルを焼き込む
+    // （niiLISP/newLISP 共通）。大域はトップレベルで安定でローカルを捕捉しない＝焼き込む
+    // 必要が無いので、**先頭小文字**の `g_` 接頭辞にして焼き込み対象から外す（本体を複製
+    // させず名前参照で解決）。焼き込みは捕捉ローカル（`V…`＝先頭大文字）だけに限定される。
+    // `g_` 接頭辞は小文字の組込みとも衝突しない。詳細は issues/14。
     fn mangle(&self, n: &str) -> String {
-        n.to_uppercase()
+        format!("g_{}", n)
     }
 
     fn emit_lam(&self, _param: &str, _body: &str) -> String {
