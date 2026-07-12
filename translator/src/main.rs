@@ -2,7 +2,7 @@
 //!
 //!   translator run   [--lang <name>] <file.lam>   … 生成・実行して assert を確認
 //!   translator bench [--lang <name>] <file.lam>   … 実行時間・最大 RSS を計測して比較
-//!   translator gen   [--lang <name>] <file.lam>   … 読める成果物を demo/ に出力（実行しない）
+//!   translator gen   [--lang <name>] <file.lam>   … 読める成果物を出力（既定 demo/・実行しない）
 
 mod ast;
 mod codegen;
@@ -85,7 +85,8 @@ fn main() {
     }
 }
 
-/// 各言語の生成ソースを出力ディレクトリに書く（既定 demo/。聴衆が読む成果物・計測用）。
+/// 各言語の生成ソースを出力ディレクトリに書く。既定 demo/ は使い捨て（gitignore）。
+/// 聴衆向けの確定版（全コーパス×全言語）は scripts/gen-all.sh が code/ に生成する。
 fn gen(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, dsl_src: &str, out_root: &str) {
     let root = std::path::Path::new(out_root);
     for be in selected {

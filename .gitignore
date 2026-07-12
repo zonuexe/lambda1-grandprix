@@ -8,5 +8,7 @@ result-*
 # Rust
 target/
 
-# translator generated output
+# translator generated output（使い捨て）: run は .gen/、gen の既定出力先は demo/。
+# 聴衆向けの確定版は scripts/gen-all.sh が生成する code/（こちらはコミットする）。
 .gen/
+/translator/demo/
