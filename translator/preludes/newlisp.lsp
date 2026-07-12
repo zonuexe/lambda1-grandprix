@@ -1,106 +1,105 @@
-; λ-1 translator — newLISP / niiLISP prelude
+; λ-1 translator — niiLISP / newLISP prelude（クロージャ変換 / defunctionalized）
 ;
-; niiLISP は cons 無し・ダイナミックスコープの独特な LISP。ラムダ計算はレキシカル
-; クロージャを要するので、kosh04 の手法を応用する:
-;   define-macro (fexpr) の LAMBDA が、生成時に expand で「大文字の自由変数」を
-;   その値に焼き込み、ダイナミックスコープ下でも疑似レキシカルクロージャを作る。
-;   → 変数は大文字にマングリングする（expand は大文字シンボルを展開する）。
-; https://gist.github.com/kosh04/262332
-(define-macro (LAMBDA) (append (lambda) (expand (args))))
+; DSL の λ はトップレベル関数 Lk(_env x) ＋捕捉環境データ (list Lk cap...) へ変換される
+; （src/codegen/newlisp.rs、issues/14 approach C）。適用は一律 APPLY。ネストしたネイティブ
+; lambda を作らないので、動的スコープの niiLISP/newLISP でも決定的に正しく動く。
 
-(define (encodeInt N)            ; host int -> チャーチ数（N は大文字＝焼き込み対象）
-  (LAMBDA (F) (LAMBDA (X)
-    (let (acc X)
-      (dotimes (i N) (set 'acc (F acc)))
-      acc))))
+; クロージャ適用: ネイティブ関数（プレリュードが注入する inc 等）とデータクロージャの両対応。
+(define (APPLY clo x)
+  (if (lambda? clo)
+      (clo x)
+      ((first clo) (rest clo) x)))
 
-(define (decodeInt v)            ; チャーチ数 -> 文字列
-  (string ((v (fn (k) (+ k 1))) 0)))
+; ---- raw 層 ----
+; チャーチ数 N = λf.λx. f^N x を defunctionalized で構築。
+(define (L_ch_x _env x)                                ; _env=(N f)
+  (let ((n (first _env)) (f (first (rest _env))) (acc x))
+    (dotimes (i n) (set 'acc (APPLY f acc)))
+    acc))
+(define (L_ch_f _env f) (list L_ch_x (first _env) f))   ; _env=(N) -> λx. f^N x
+(define (encodeInt N) (list L_ch_f N))                ; host int -> チャーチ数
 
-(define (decodeBool v)           ; チャーチ真偽値 -> "true"/"false"
-  ((v "true") "false"))
+(define (decodeInt v)                                 ; チャーチ数 -> 文字列
+  (string (APPLY (APPLY v (fn (k) (+ k 1))) 0)))
+(define (decodeBool v)                                ; チャーチ真偽値 -> "true"/"false"
+  (APPLY (APPLY v "true") "false"))
 
 (set 'failures 0)
-
 (define (_check a b label)
   (if (= a b)
       (println "ok   " label)
-      (begin
-        (inc failures)
-        (println "FAIL " label ": " a " != " b))))
-
+      (begin (inc failures) (println "FAIL " label ": " a " != " b))))
 (define (_finish)
   (if (> failures 0)
       (begin (println failures " failure(s)") (exit 1))
       (begin (println "all green") (exit))))
 
+; ---- JSON 層（型付き値。ADR-0005）defunctionalized ----
+; セレクタ: K=λa.λb.a, KI=λa.λb.b, ID=λx.x
+(define (L_k2 _env b) (first _env))                 ; _env=(a) -> a
+(define (L_k1 _env a) (list L_k2 a))               ; λa.λb.a
+(define K_SEL (list L_k1))
+(define (L_id _env x) x)                            ; λx.x
+(define (L_ki1 _env a) (list L_id))                ; λa.λb.b = λa.ID
+(define KI_SEL (list L_ki1))
 
-; ============ JSON 層（型付き値。ADR-0005） ============
-; ダイナミックスコープ＋expand（大文字のみ焼き込み）の落とし穴に注意:
-;   閉包に「捕捉」される自由変数だけを大文字にし、しかも全域で一意名にする
-;   （render の V0,V1… と同じ理由。同名の大文字が別フレームで束縛されると
-;    expand が誤った値を lambda 本体・仮引数位置に焼き込んで壊れる）。
-;   捕捉されない変数は小文字にする（小文字は expand 対象外なので安全）。
-;   捕捉大文字名は encodeInt の N/F/X や DSL 大域名(PAIR,NIL,…)と衝突させない。
-; 既知の制約: json.lam の assert 10/11（range 経由の [1] / [1,2,3]）は緑にできない。
-;   これは JSON 層ではなく render_scoped（newlisp.rs）側の疑似クロージャの限界:
-;   expand が大文字大域コンビネータ(PAIR/CONS/TINT)を閉包へインライン展開し、
-;   その内部で再利用される V0,V1… が range の入れ子簡約で衝突して壊れる。
-;   assert 1-9 は緑。JSON プレリュード単体では回避不能（render 変更が要る）。
-(define (jK JKA)     (LAMBDA (b) JKA))
-(define (jKI a)      (LAMBDA (b) b))
-(define (mkpair MPA MPB) (LAMBDA (s) ((s MPA) MPB)))
-(define (fstp p)     (p jK))
-(define (sndp p)     (p jKI))
-(define (churchToInt c) ((c (fn (k) (+ k 1))) 0))
-(define (jcTrue JCT) (LAMBDA (f) JCT))
-(define (jcFalse t)  (LAMBDA (f) f))
-(define (boolToHost c) ((c true) nil))
-(define nilH         (LAMBDA (NLN) (LAMBDA (c) NLN)))
-(define (consH CHH CHT) (LAMBDA (n) (LAMBDA (c) ((c CHH) CHT))))
-(define (isNil lst)
-  (boolToHost ((lst jcTrue) (LAMBDA (h) (LAMBDA (tl) jcFalse)))))
-(define (headL lst) ((lst nil) (LAMBDA (HLH) (LAMBDA (tl) HLH))))
-(define (tailL lst) ((lst nil) (LAMBDA (h) (LAMBDA (tl) tl))))
+; pair a b = λs. s a b
+(define (L_pair _env s)                            ; _env=(a b)
+  (APPLY (APPLY s (first _env)) (first (rest _env))))
+(define (mkpair a b) (list L_pair a b))
+(define (fstp p) (APPLY p K_SEL))
+(define (sndp p) (APPLY p KI_SEL))
+
+(define (churchToInt c) (APPLY (APPLY c (fn (k) (+ k 1))) 0))
+(define (boolToHost c) (APPLY (APPLY c true) nil))    ; true / nil
+
+; Scott リスト: nil=λn.λc.n=K, cons h t=λn.λc. c h t
+(define NIL_H K_SEL)
+(define (L_cons2 _env c)                           ; _env=(h t) -> c h t
+  (APPLY (APPLY c (first _env)) (first (rest _env))))
+(define (L_cons1 _env n) (list L_cons2 (first _env) (first (rest _env))))  ; _env=(h t), ignore n
+(define (consH h t) (list L_cons1 h t))
+
+; isNil: nil-case=cTrue(K), cons-case=λh.λt.cFalse(KI)
+(define (L_fc2 _env t) KI_SEL)
+(define (L_fc1 _env h) (list L_fc2))               ; λh.λt.KI
+(define (isNil lst) (boolToHost (APPLY (APPLY lst K_SEL) (list L_fc1))))
+(define (headL lst) (APPLY (APPLY lst "") K_SEL))   ; cons-case λh.λt.h = K
+(define (tailL lst) (APPLY (APPLY lst "") KI_SEL))  ; cons-case λh.λt.t = KI
 (define (walk lst)
-  (let (acc '())
+  (let ((out '()))
     (while (not (isNil lst))
-      (push (headL lst) acc -1)
+      (push (headL lst) out -1)
       (set 'lst (tailL lst)))
-    acc))
+    out))
 
 (define (jInt n)  (mkpair (encodeInt 1) (encodeInt n)))
 (define (jBool b) (mkpair (encodeInt 2) b))
 (define (jStr s)
-  (mkpair (encodeInt 3)
-    (let (lst nilH)
-      (dolist (ch (reverse (map char (explode s))))
-        (set 'lst (consH (encodeInt ch) lst)))
-      lst)))
-(define (jArr l) (mkpair (encodeInt 4) l))
-(define (jObj l) (mkpair (encodeInt 5) l))
-(define (jNull)  (mkpair (encodeInt 6) (LAMBDA (x) x)))
+  (let ((lst NIL_H))
+    (dolist (code (reverse (map char (explode s))))
+      (set 'lst (consH (encodeInt code) lst)))
+    (mkpair (encodeInt 3) lst)))
+(define (jArr lst) (mkpair (encodeInt 4) lst))
+(define (jObj lst) (mkpair (encodeInt 5) lst))
+(define (jNull)    (mkpair (encodeInt 6) (list L_id)))
 
 (define (jsonEscape s)
-  (let (out "\"")
+  (let ((out "\""))
     (dolist (ch (explode s))
-      (set 'out (append out
-        (cond ((= ch "\"") "\\\"")
-              ((= ch "\\") "\\\\")
-              (true ch)))))
-    (append out "\"")))
-
+      (cond ((= ch "\"") (extend out "\\\""))
+            ((= ch "\\") (extend out "\\\\"))
+            (true        (extend out ch))))
+    (extend out "\"")))
 (define (decodeJson v)
-  (let (tag (churchToInt (fstp v)) payload (sndp v))
+  (let ((tag (churchToInt (fstp v))) (payload (sndp v)))
     (cond
       ((= tag 1) (string (churchToInt payload)))
       ((= tag 2) (if (boolToHost payload) "true" "false"))
-      ((= tag 3) (jsonEscape (join (map char (map churchToInt (walk payload))))))
+      ((= tag 3) (jsonEscape (join (map (fn (b) (char (churchToInt b))) (walk payload)))))
       ((= tag 4) (append "[" (join (map decodeJson (walk payload)) ",") "]"))
       ((= tag 5) (append "{"
-                   (join (map (fn (pr)
-                                (append (decodeJson (fstp pr)) ":" (decodeJson (sndp pr))))
-                              (walk payload)) ",")
-                   "}"))
+                   (join (map (fn (pr) (append (decodeJson (fstp pr)) ":" (decodeJson (sndp pr))))
+                              (walk payload)) ",") "}"))
       ((= tag 6) "null")
       (true "?"))))
