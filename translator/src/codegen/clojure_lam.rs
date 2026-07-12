@@ -23,6 +23,13 @@ impl Backend for ClojureLam {
         Some(("lam1.clj".into(), self.prelude().into()))
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "def", "if", "do", "let", "quote", "var", "fn", "loop", "recur", "throw", "try",
+            "catch", "finally", "new", "set!", "true", "false", "nil", "and", "or", "not",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(λ {} {})", param, body)
     }

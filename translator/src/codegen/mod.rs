@@ -35,9 +35,22 @@ pub trait Backend {
     fn ext(&self) -> &'static str;
     fn prelude(&self) -> &'static str;
 
-    /// 変数・定義名のマングリング。予約語衝突を避けるため一律 `_` を前置する。
+    /// この言語で識別子に使えない予約語・組込みキーワード（DSL 名がこれに一致した時だけ
+    /// マングルでエスケープする）。既定は空＝無衝突。
+    fn reserved(&self) -> &'static [&'static str] {
+        &[]
+    }
+
+    /// DSL 名 → ターゲット識別子。既定は「予約語に当たる時だけ `_` を前置」（それ以外は素の名前）。
+    /// 予約語以外の理由（大文字始まりが構築子になる Haskell 等）でエスケープが要る言語や、
+    /// エスケープ文字が `_` でない言語（SML の `v_`）、sigil で無衝突な言語（`$` の PHP/Perl）は
+    /// これを override する。
     fn mangle(&self, n: &str) -> String {
-        format!("_{}", n)
+        if self.reserved().contains(&n) {
+            format!("_{}", n)
+        } else {
+            n.to_string()
+        }
     }
 
     fn emit_lam(&self, param: &str, body: &str) -> String;

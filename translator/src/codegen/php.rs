@@ -19,9 +19,10 @@ impl Backend for Php {
         Some(("lam1.php".into(), self.prelude().into()))
     }
 
-    // PHP の変数は `$` 始まり。ホスト関数名（encodeInt 等）には付けない。
+    // PHP の変数は `$` 始まり。sigil が名前空間を分けるので予約語と衝突しない＝マングル不要
+    // （ホスト関数名 encodeInt 等には `$` を付けない）。
     fn mangle(&self, n: &str) -> String {
-        format!("$_{}", n)
+        format!("${}", n)
     }
 
     fn emit_lam(&self, param: &str, body: &str) -> String {

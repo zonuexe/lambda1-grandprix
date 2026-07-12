@@ -17,6 +17,14 @@ impl Backend for Kotlin {
         include_str!("../../preludes/kotlin.kt")
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "as", "break", "class", "continue", "do", "else", "false", "for", "fun", "if", "in",
+            "interface", "is", "null", "object", "package", "return", "super", "this", "throw",
+            "true", "try", "typealias", "typeof", "val", "var", "when", "while",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("Fun({{ {} -> {} }})", param, body)
     }

@@ -19,8 +19,9 @@ impl Backend for Perl {
         Some(("lam1.pl".into(), self.prelude().into()))
     }
 
+    // Perl の変数は `$` 始まり。sigil が名前空間を分けるので予約語と衝突しない＝マングル不要。
     fn mangle(&self, n: &str) -> String {
-        format!("$_{}", n)
+        format!("${}", n)
     }
 
     fn emit_lam(&self, param: &str, body: &str) -> String {

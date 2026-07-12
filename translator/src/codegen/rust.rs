@@ -56,6 +56,15 @@ impl Backend for Rust {
     }
 
     // render を override するため emit_lam は未使用（trait 要件のため実装のみ）。
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum",
+            "extern", "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod",
+            "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct", "super",
+            "trait", "true", "type", "union", "unsafe", "use", "where", "while",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("lam(move |{}| {})", param, body)
     }

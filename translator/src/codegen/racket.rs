@@ -19,6 +19,13 @@ impl Backend for Racket {
         Some(("lam1.rkt".into(), self.prelude().into()))
     }
 
+    // Racket は一律 `_` 前置を維持する。`#lang racket` は多数の名前（and/or/not/if/map/…）を
+    // import 済みで、トップレベル `(define <名前> …)` での再束縛は import 衝突エラーになるため、
+    // 予約語リストでの選択的エスケープでは実質すべてが対象になる。`_` 前置で一括回避する。
+    fn mangle(&self, n: &str) -> String {
+        format!("_{}", n)
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(lambda ({}) {})", param, body)
     }

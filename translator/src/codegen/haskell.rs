@@ -17,6 +17,14 @@ impl Backend for Haskell {
         include_str!("../../preludes/haskell.hs")
     }
 
+    // Haskell は一律 `_` 前置を維持する（予約語だけでは足りない）:
+    //   - 大文字始まりの識別子は値ではなくデータ構築子として解釈される（I/K/S/Z が不正になる）
+    //   - `and`/`not`/`succ`/`pred` 等は Prelude と衝突し、トップレベル束縛が曖昧になる
+    // `_` 前置はこの両方を一度に回避する（`_I` は小文字始まりの通常の変数）。
+    fn mangle(&self, n: &str) -> String {
+        format!("_{}", n)
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(Fun (\\{} -> {}))", param, body)
     }

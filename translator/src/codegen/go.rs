@@ -17,6 +17,15 @@ impl Backend for Go {
         include_str!("../../preludes/go.go")
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "break", "case", "chan", "const", "continue", "default", "defer", "else",
+            "fallthrough", "for", "func", "go", "goto", "if", "import", "interface", "map",
+            "package", "range", "return", "select", "struct", "switch", "type", "var",
+            "true", "false", "nil", "iota",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("Fun(func({} D) D {{ return {} }})", param, body)
     }

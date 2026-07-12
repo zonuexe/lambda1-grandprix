@@ -24,6 +24,11 @@ impl Backend for EmacsLam {
         Some(("lam1.el".into(), self.prelude().into()))
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        // Lisp-2: DSL 値は変数 (setq)。定数 nil / t だけエスケープ。
+        &["nil", "t"]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(λ {} {})", param, body)
     }

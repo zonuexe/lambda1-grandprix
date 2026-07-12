@@ -18,6 +18,17 @@ impl Backend for Swift {
         include_str!("../../preludes/swift.swift")
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "associatedtype", "class", "deinit", "enum", "extension", "fileprivate", "func",
+            "import", "init", "inout", "internal", "let", "open", "operator", "private", "protocol",
+            "public", "rethrows", "static", "struct", "subscript", "typealias", "var", "break",
+            "case", "continue", "default", "defer", "do", "else", "fallthrough", "for", "guard",
+            "if", "in", "repeat", "return", "switch", "where", "while", "as", "catch", "false",
+            "is", "nil", "self", "super", "throw", "throws", "true", "try",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!(".fun {{ {} in {} }}", param, body)
     }

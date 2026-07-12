@@ -21,6 +21,16 @@ impl Backend for ScalaInfix {
         include_str!("../../preludes/scala_infix.scala")
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "abstract", "case", "catch", "class", "def", "do", "else", "enum", "export", "extends",
+            "false", "final", "finally", "for", "forSome", "given", "if", "implicit", "import",
+            "lazy", "match", "new", "null", "object", "override", "package", "private", "protected",
+            "return", "sealed", "super", "then", "throw", "trait", "true", "try", "type", "val",
+            "var", "while", "with", "yield",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("Fun({} => {})", param, body)
     }

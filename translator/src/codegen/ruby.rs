@@ -19,6 +19,15 @@ impl Backend for Ruby {
         Some(("lam1.rb".into(), self.prelude().into()))
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "BEGIN", "END", "alias", "and", "begin", "break", "case", "class", "def", "defined?",
+            "do", "else", "elsif", "end", "ensure", "false", "for", "if", "in", "module", "next",
+            "nil", "not", "or", "redo", "rescue", "retry", "return", "self", "super", "then",
+            "true", "undef", "unless", "until", "when", "while", "yield",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(->({}) {{ {} }})", param, body)
     }

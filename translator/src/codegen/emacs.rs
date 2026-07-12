@@ -22,6 +22,12 @@ impl Backend for Emacs {
         Some(("lam1.el".into(), self.prelude().into()))
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        // Lisp-2: DSL 値は変数 (setq)。関数枠の特殊形式 (if/and/not…) とは衝突しない。
+        // 変数として setq できない定数 nil / t だけをエスケープする。
+        &["nil", "t"]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(lambda ({}) {})", param, body)
     }

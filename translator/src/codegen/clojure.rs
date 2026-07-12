@@ -19,6 +19,14 @@ impl Backend for Clojure {
         Some(("lam1.clj".into(), self.prelude().into()))
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        // 特殊形式・リテラル、および core の再定義で警告になる基本関数。
+        &[
+            "def", "if", "do", "let", "quote", "var", "fn", "loop", "recur", "throw", "try",
+            "catch", "finally", "new", "set!", "true", "false", "nil", "and", "or", "not",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         format!("(fn [{}] {})", param, body)
     }

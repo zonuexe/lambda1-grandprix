@@ -17,10 +17,26 @@ impl Backend for Sml {
         include_str!("../../preludes/sml.sml")
     }
 
-    // SML の英数字識別子は文字始まり必須（`_x` は不正、`_` はワイルドカード）。
-    // 予約語衝突は `v_` 前置で回避する。
+    // SML キーワード＋組込み構築子 true/false/nil。DSL 名がこれに一致した時だけエスケープ。
+    // 大文字始まりの識別子（I/K/S/Z 等）は SML では通常の値識別子として合法なのでそのまま。
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "abstype", "and", "andalso", "as", "case", "datatype", "do", "else", "end", "eqtype",
+            "exception", "fn", "fun", "functor", "handle", "if", "in", "include", "infix",
+            "infixr", "let", "local", "nonfix", "of", "op", "open", "orelse", "raise", "rec",
+            "sharing", "sig", "signature", "struct", "structure", "then", "type", "val", "where",
+            "while", "with", "withtype", "true", "false", "nil",
+        ]
+    }
+
+    // SML の英数字識別子は文字始まり必須（`_x` は不正、`_` はワイルドカード）ので、
+    // 予約語衝突は `_` ではなく `v_` 前置で回避する。
     fn mangle(&self, n: &str) -> String {
-        format!("v_{}", n)
+        if self.reserved().contains(&n) {
+            format!("v_{}", n)
+        } else {
+            n.to_string()
+        }
     }
 
     fn emit_lam(&self, param: &str, body: &str) -> String {

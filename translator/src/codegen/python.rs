@@ -19,6 +19,15 @@ impl Backend for Python {
         Some(("lam1.py".into(), self.prelude().into()))
     }
 
+    fn reserved(&self) -> &'static [&'static str] {
+        &[
+            "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
+            "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global",
+            "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise",
+            "return", "try", "while", "with", "yield",
+        ]
+    }
+
     fn emit_lam(&self, param: &str, body: &str) -> String {
         // 適用時に body が誤結合しないよう常に括弧で包む
         format!("(lambda {}: {})", param, body)
