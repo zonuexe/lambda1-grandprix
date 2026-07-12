@@ -8,7 +8,9 @@
 //! 観測**する（0.3.0 / ADR-0008。旧: 出力バイト列を数える迂回。ADR-0003 の望ましい性質1）:
 //!   decodeInt  … 項（church 数）を eval_numeral → 整数、期待値と比較。
 //!   decodeBool … `bool 1 0` を eval_numeral → 1/0 に落とし、"true"/"false" と比較。
-//!   decodeJson … Lazy K に現実的な対応物が無いため非対応（skip）。
+//!   decodeJson … スカラ（jInt / jBool）のみ部分対応（int/bool と同じ observe）。array /
+//!                string / object / null や range 由来の計算リストは Scott リスト走査
+//!                （fixpoint 相当）が要り純 SKI で非現実的なため skip。
 
 use super::Backend;
 use crate::ast::{Program, Term};
@@ -116,6 +118,24 @@ fn to_comb(t: &Term, map: &BTreeMap<String, Comb>) -> Comb {
     }
 }
 
+/// decodeJson の「簡単な」部分対応: スカラの typed value（int / bool）だけを、その値の
+/// church 項として観測できる形へ落とす。array / string / object / null や `range` 由来の
+/// 計算リストは Scott リスト走査（fixpoint 相当）が要り純 SKI で非現実的なので None（skip）。
+fn decode_json_scalar(arg: &Term, map: &BTreeMap<String, Comb>) -> Option<(Kind, Comb)> {
+    match arg {
+        // jInt[n] … payload は church n。eval_numeral で n を観測。
+        Term::HostCall(n, a) if n == "jInt" && a.len() == 1 => match &a[0] {
+            Term::IntLit(k) => Some((Kind::Int, church(*k))),
+            _ => None,
+        },
+        // jBool[b] … church 真偽値を `b 1 0` に落として 1/0 を観測。
+        Term::HostCall(n, a) if n == "jBool" && a.len() == 1 => {
+            Some((Kind::Bool, bool_to_numeral(to_comb(&a[0], map))))
+        }
+        _ => None,
+    }
+}
+
 /// SKIスタイルの文字列へ（並置は左結合、引数の App は括弧）。
 fn render(c: &Comb) -> String {
     match c {
@@ -197,6 +217,10 @@ impl Backend for LazyK {
                 Term::HostCall(name, args) if name == "decodeBool" && !args.is_empty() => {
                     Some((Kind::Bool, render(&bool_to_numeral(to_comb(&args[0], &map)))))
                 }
+                // decodeJson はスカラ（jInt / jBool）のみ部分対応。他は skip。
+                Term::HostCall(name, args) if name == "decodeJson" && !args.is_empty() => {
+                    decode_json_scalar(&args[0], &map).map(|(k, c)| (k, render(&c)))
+                }
                 _ => None,
             };
             match built {
@@ -227,7 +251,7 @@ impl Backend for LazyK {
         for e in entries.iter() {
             if e.kind == Kind::Unsupported {
                 skipped += 1;
-                println!("skip assert {} (Lazy K 非対応: decodeJson 等)", e.idx);
+                println!("skip assert {} (Lazy K 非対応: decodeJson の array/string/object/null 等)", e.idx);
                 continue;
             }
             let n = match zonu_lazyk::Program::compile(&e.program)
