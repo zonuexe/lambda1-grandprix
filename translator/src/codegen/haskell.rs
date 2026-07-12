@@ -2,7 +2,7 @@
 
 use super::Backend;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 pub struct Haskell;
 
@@ -72,5 +72,33 @@ impl Backend for Haskell {
     }
     fn run_argv(&self, dir: &Path, _file: &Path) -> Vec<String> {
         vec![dir.join("main_bin").to_string_lossy().into_owned()]
+    }
+
+    /// `run` 用に build→実行するが、GHC がコンパイル不能な場合は runghc へフォールバックする。
+    ///
+    /// 自己適用（例 Y/Z コンビネータの `x x`）は GHC の simplifier が `app` の unfold ループに
+    /// 陥り、`-O0` でも `Simplifier ticks exhausted` でコンパイルできない。その項に限り、
+    /// 最適化器を通さない `runghc`（bytecode）で実行する。標準/bench コーパスは -O2 で通るので
+    /// フォールバックせず、実行性能（-O2 の目的）は変わらない。
+    fn exec(&self, dir: &Path, file: &Path) -> std::io::Result<bool> {
+        let bin = dir.join("main_bin");
+        let compiled = Command::new("ghc")
+            .args(["-O2", "-o"])
+            .arg(&bin)
+            .args(["-odir"])
+            .arg(dir)
+            .args(["-hidir"])
+            .arg(dir)
+            .arg(file)
+            .stderr(Stdio::piped()) // フォールバック時に GHC の大量エラーを出さない
+            .stdout(Stdio::null())
+            .output()?;
+        if compiled.status.success() {
+            let st = Command::new(&bin).current_dir(dir).status()?;
+            return Ok(st.success());
+        }
+        eprintln!("(haskell: ghc -O2 でコンパイル不能 — runghc へフォールバック。自己適用か?)");
+        let st = Command::new("runghc").arg(file).current_dir(dir).status()?;
+        Ok(st.success())
     }
 }
