@@ -14,7 +14,7 @@ impl Backend for Kotlin {
         "kt"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/kotlin.kt")
+        include_str!("../../../languages/kotlin/prelude.kt")
     }
 
     fn reserved(&self) -> &'static [&'static str] {

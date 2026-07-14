@@ -15,7 +15,7 @@ impl Backend for Java {
         "java"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/java.java")
+        include_str!("../../../languages/java/prelude.java")
     }
 
     fn reserved(&self) -> &'static [&'static str] {

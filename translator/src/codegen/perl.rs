@@ -13,7 +13,7 @@ impl Backend for Perl {
         "pl"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/perl.pl")
+        include_str!("../../../languages/perl/prelude.pl")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.pl".into(), self.prelude().into()))

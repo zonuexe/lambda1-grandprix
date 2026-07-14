@@ -15,7 +15,7 @@ impl Backend for Swift {
         "swift"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/swift.swift")
+        include_str!("../../../languages/swift/prelude.swift")
     }
 
     fn reserved(&self) -> &'static [&'static str] {

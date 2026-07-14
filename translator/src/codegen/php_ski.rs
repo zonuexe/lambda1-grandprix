@@ -8,7 +8,7 @@
 //!
 //! 評価は **call-by-name（遅延）**: 正格 SKI は bracket abstraction のサンク（`λu.M`→`K M`）
 //! を先行評価して Z 不動点が発散するため、適用の実引数を必ずメモ化サンク `_t(fn()=> …)` で
-//! 包む（詳細は preludes/php_ski.php）。これで recursion（Z 階乗）も回る。
+//! 包む（詳細は languages/php-ski/prelude.php）。これで recursion（Z 階乗）も回る。
 
 use super::Backend;
 use crate::ast::{Program, Term};
@@ -114,7 +114,7 @@ impl Backend for PhpSki {
         "php"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/php_ski.php")
+        include_str!("../../../languages/php-ski/prelude.php")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.php".into(), self.prelude().into()))

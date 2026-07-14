@@ -13,7 +13,7 @@ impl Backend for Php {
         "php"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/php.php")
+        include_str!("../../../languages/php/prelude.php")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.php".into(), self.prelude().into()))

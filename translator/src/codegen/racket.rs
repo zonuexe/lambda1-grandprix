@@ -13,7 +13,7 @@ impl Backend for Racket {
         "rkt"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/racket.rkt")
+        include_str!("../../../languages/racket/prelude.rkt")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.rkt".into(), self.prelude().into()))

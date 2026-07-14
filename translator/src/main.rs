@@ -86,7 +86,7 @@ fn main() {
 }
 
 /// 各言語の生成ソースを出力ディレクトリに書く。既定 demo/ は使い捨て（gitignore）。
-/// 聴衆向けの確定版（全コーパス×全言語）は scripts/gen-all.sh が code/ に生成する。
+/// 聴衆向けの確定版（全コーパス×全言語）は scripts/gen-all.sh が demos/ に生成する。
 fn gen(selected: &[&Box<dyn codegen::Backend>], prog: &ast::Program, dsl_src: &str, out_root: &str) {
     let root = std::path::Path::new(out_root);
     for be in selected {

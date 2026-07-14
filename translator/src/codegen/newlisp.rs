@@ -158,7 +158,7 @@ impl Backend for NewLisp {
         "lsp"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/newlisp.lsp")
+        include_str!("../../../languages/newlisp/prelude.lsp")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.lsp".into(), self.prelude().into()))

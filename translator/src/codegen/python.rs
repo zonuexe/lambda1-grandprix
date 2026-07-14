@@ -13,7 +13,7 @@ impl Backend for Python {
         "py"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/python.py")
+        include_str!("../../../languages/python/prelude.py")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.py".into(), self.prelude().into()))

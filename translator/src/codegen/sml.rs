@@ -14,7 +14,7 @@ impl Backend for Sml {
         "sml"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/sml.sml")
+        include_str!("../../../languages/sml/prelude.sml")
     }
 
     // SML キーワード＋組込み構築子 true/false/nil。DSL 名がこれに一致した時だけエスケープ。

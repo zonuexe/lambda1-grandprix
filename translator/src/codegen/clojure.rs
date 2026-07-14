@@ -13,7 +13,7 @@ impl Backend for Clojure {
         "clj"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/clojure.clj")
+        include_str!("../../../languages/clojure/prelude.clj")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.clj".into(), self.prelude().into()))

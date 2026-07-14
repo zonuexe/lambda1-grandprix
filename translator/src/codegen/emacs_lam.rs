@@ -19,7 +19,7 @@ impl Backend for EmacsLam {
         "el"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/emacs_lam.el")
+        include_str!("../../../languages/emacs-lam/prelude.el")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.el".into(), self.prelude().into()))

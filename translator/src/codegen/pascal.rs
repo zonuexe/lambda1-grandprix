@@ -145,7 +145,7 @@ impl Backend for Pascal {
         "pas"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/pascal.pas")
+        include_str!("../../../languages/pascal/prelude.pas")
     }
 
     // generate を全面 override するため emit_* は未使用（trait 要件のスタブ）。

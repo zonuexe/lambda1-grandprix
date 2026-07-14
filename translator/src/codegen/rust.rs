@@ -52,7 +52,7 @@ impl Backend for Rust {
         "rs"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/rust.rs")
+        include_str!("../../../languages/rust/prelude.rs")
     }
 
     // render を override するため emit_lam は未使用（trait 要件のため実装のみ）。

@@ -18,7 +18,7 @@ impl Backend for ScalaInfix {
         "scala"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/scala_infix.scala")
+        include_str!("../../../languages/scala-infix/prelude.scala")
     }
 
     fn reserved(&self) -> &'static [&'static str] {

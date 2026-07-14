@@ -14,7 +14,7 @@ impl Backend for Scala {
         "scala"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/scala.scala")
+        include_str!("../../../languages/scala/prelude.scala")
     }
 
     fn reserved(&self) -> &'static [&'static str] {

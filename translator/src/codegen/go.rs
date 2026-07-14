@@ -14,7 +14,7 @@ impl Backend for Go {
         "go"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/go.go")
+        include_str!("../../../languages/go/prelude.go")
     }
 
     fn reserved(&self) -> &'static [&'static str] {

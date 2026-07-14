@@ -17,7 +17,7 @@ impl Backend for ClojureLam {
         "clj"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/clojure_lam.clj")
+        include_str!("../../../languages/clojure-lam/prelude.clj")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.clj".into(), self.prelude().into()))

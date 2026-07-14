@@ -14,7 +14,7 @@ impl Backend for Haskell {
         "hs"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/haskell.hs")
+        include_str!("../../../languages/haskell/prelude.hs")
     }
 
     // Haskell は一律 `_` 前置を維持する（予約語だけでは足りない）:

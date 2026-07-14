@@ -1,7 +1,7 @@
 # 生成コード（聴衆の目視用）
 
 `translator/scripts/gen-all.sh` が出力する、全コーパス × 全言語の生成物。
-`code/<言語>/<コーパス>/` に自己完結で配置（demo.<ext> ＋ 分離ライブラリ ＋ source.lam）。
+`demos/<言語>/<コーパス>/` に自己完結で配置（demo.<ext> ＋ 分離ライブラリ ＋ source.lam）。
 聴衆は自分の言語のディレクトリだけを単独で読めます。
 
 | 言語 | bench | empty | json | recursion | v1 |

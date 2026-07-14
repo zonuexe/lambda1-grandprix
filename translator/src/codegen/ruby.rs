@@ -13,7 +13,7 @@ impl Backend for Ruby {
         "rb"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/ruby.rb")
+        include_str!("../../../languages/ruby/prelude.rb")
     }
     fn library(&self) -> Option<(String, String)> {
         Some(("lam1.rb".into(), self.prelude().into()))

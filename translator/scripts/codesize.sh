@@ -5,12 +5,14 @@
 # 固定ボイラープレートを控除し、定義＋表明の正味コード量だけを比較する。
 # 分離言語の外部ライブラリ(lam1.*)は demo.* を計測対象にすることで元から除外。
 set -euo pipefail
-corpus="${1:-corpus/v1.lam}"
-cd "$(dirname "$0")/.."
+corpus_arg="${1:-corpus/v1.lam}"
+cd "$(dirname "$0")/.."                       # translator/
+repo_root="$(cd .. && pwd)"
+corpus="$repo_root/$corpus_arg"
 
 rm -rf /tmp/gsz_c /tmp/gsz_0
 cargo run --quiet -- gen --out /tmp/gsz_c "$corpus" >/dev/null
-cargo run --quiet -- gen --out /tmp/gsz_0 corpus/empty.lam >/dev/null
+cargo run --quiet -- gen --out /tmp/gsz_0 "$repo_root/corpus/empty.lam" >/dev/null
 
 # 言語非依存の素朴なトークナイザ（識別子 / 数値 / 各記号1文字）
 tok() { grep -oE '[A-Za-z_][A-Za-z0-9_]*|[0-9]+|[^[:space:][:alnum:]_]' "$1" 2>/dev/null | wc -l | tr -d ' '; }

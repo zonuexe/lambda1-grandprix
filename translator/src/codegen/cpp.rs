@@ -61,7 +61,7 @@ impl Backend for Cpp {
         "cpp"
     }
     fn prelude(&self) -> &'static str {
-        include_str!("../../preludes/cpp.cpp")
+        include_str!("../../../languages/cpp/prelude.cpp")
     }
 
     fn reserved(&self) -> &'static [&'static str] {
